@@ -10,7 +10,8 @@
    ];
 
   # https://devenv.sh/languages/
-  # languages.rust.enable = true;
+  languages.c.enable = true;
+  languages.rust.enable = true;
 
   # https://devenv.sh/processes/
   # processes.cargo-watch.exec = "cargo-watch";
