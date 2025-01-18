@@ -1,4 +1,4 @@
-package emulator
+package instructions
 
 type JI struct {
 	Opcode byte
@@ -6,7 +6,16 @@ type JI struct {
 	JIM1   uint32
 }
 
-func (i JI) decode(inst uint32) Inst {
+const OP_TOPLEVEL_JI = 0b1101111
+
+func (i JI) Operation() string {
+	if i.Opcode != OP_TOPLEVEL_JI {
+		panic("This shouldn't happen")
+	}
+	return "jal"
+}
+
+func (i JI) Decode(inst uint32) Inst {
 	op := decodeOpcode(inst)
 	rd := decodeRD(inst)
 	jim1 := decodeJIM1(inst)

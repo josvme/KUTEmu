@@ -1,4 +1,4 @@
-package emulator
+package instructions
 
 type SI struct {
 	Opcode byte
@@ -9,7 +9,25 @@ type SI struct {
 	SIM2   byte
 }
 
-func (i SI) decode(inst uint32) Inst {
+const OP_TOPLEVEL_SI = 0b0100011
+
+func (i SI) Operation() string {
+	if i.Opcode != OP_TOPLEVEL_SI {
+		panic("This shouldn't happen")
+	}
+	switch {
+	case i.F3 == 0x00:
+		return "sb"
+	case i.F3 == 0x01:
+		return "sh"
+	case i.F3 == 0x02:
+		return "sw"
+	default:
+		panic("Unknown Operation")
+	}
+}
+
+func (i SI) Decode(inst uint32) Inst {
 	op := decodeOpcode(inst)
 	sim1 := decodeSIM1(inst)
 	f3 := decodeF3(inst)

@@ -1,4 +1,4 @@
-package emulator
+package instructions
 
 type FI struct {
 	Opcode byte
@@ -10,7 +10,14 @@ type FI struct {
 	FM     byte
 }
 
-func (i FI) decode(inst uint32) Inst {
+func (i FI) Operation() string {
+	if i.Opcode == 0b0001111 && i.F3 == 0x0 {
+		return "fence"
+	}
+	panic("This shouldn't happen")
+}
+
+func (i FI) Decode(inst uint32) Inst {
 	op := decodeOpcode(inst)
 	rd := decodeRD(inst)
 	f3 := decodeF3(inst)

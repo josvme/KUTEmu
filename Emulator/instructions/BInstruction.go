@@ -1,4 +1,4 @@
-package emulator
+package instructions
 
 type BI struct {
 	Opcode byte
@@ -9,7 +9,31 @@ type BI struct {
 	BIM2   byte
 }
 
-func (i BI) decode(inst uint32) Inst {
+const OP_TOPLEVEL_BI = 0b1100011
+
+func (i BI) Operation() string {
+	if i.Opcode != OP_TOPLEVEL_BI {
+		panic("This shouldn't happen")
+	}
+	switch {
+	case i.F3 == 0x0:
+		return "beq"
+	case i.F3 == 0x1:
+		return "bne"
+	case i.F3 == 0x4:
+		return "blt"
+	case i.F3 == 0x5:
+		return "bge"
+	case i.F3 == 0x6:
+		return "bltu"
+	case i.F3 == 0x7:
+		return "bgeu"
+	default:
+		panic("Unknown Operation")
+	}
+}
+
+func (i BI) Decode(inst uint32) Inst {
 	op := decodeOpcode(inst)
 	bim1 := decodeBIM1(inst)
 	f3 := decodeF3(inst)

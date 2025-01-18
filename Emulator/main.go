@@ -1,5 +1,8 @@
 package main
 
+import "riscv/emulator"
+
 func main() {
-	println("Hello World")
+	emu := emulator.Emulator{}
+	emu.Run()
 }

@@ -1,4 +1,4 @@
-package emulator
+package instructions
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 func TestTransform(t *testing.T) {
 
 	expected := uint32(0x06800513)
-	got := transformLittleToBig([4]byte{0x13, 0x05, 0x80, 0x06})
+	got := TransformLittleToBig([4]byte{0x13, 0x05, 0x80, 0x06})
 
 	if expected != got {
 		t.Errorf("Expected %v, Got %v", expected, got)
@@ -37,7 +37,7 @@ func PrettyPrintStructAsBinary(s interface{}) {
 
 func TestDecoderInstructions(t *testing.T) {
 	decodeInst := func(inst uint32, want Inst) Inst {
-		return want.decode(inst)
+		return want.Decode(inst)
 	}
 	type TestInst struct {
 		inst uint32

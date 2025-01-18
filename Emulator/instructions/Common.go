@@ -1,4 +1,4 @@
-package emulator
+package instructions
 
 func decodeRS1(inst uint32) byte {
 	return byte(getBitsAsUInt32(inst, 15, 19))

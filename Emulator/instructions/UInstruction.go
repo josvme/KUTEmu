@@ -1,4 +1,4 @@
-package emulator
+package instructions
 
 type UI struct {
 	Opcode byte
@@ -6,7 +6,18 @@ type UI struct {
 	UIM1   uint32
 }
 
-func (i UI) decode(inst uint32) Inst {
+func (i UI) Operation() string {
+	switch {
+	case i.Opcode == 0b0110111:
+		return "lui"
+	case i.Opcode == 0b0010111:
+		return "auipc"
+	default:
+		panic("Unknown Operation")
+	}
+}
+
+func (i UI) Decode(inst uint32) Inst {
 	op := decodeOpcode(inst)
 	rd := decodeRD(inst)
 	uim1 := decodeUIM1(inst)
