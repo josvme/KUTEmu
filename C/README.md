@@ -19,3 +19,7 @@ $OBJDUMP -D hello.img -b binary -m riscv:rv32
 ```shell
 qemu-system-riscv32 -machine virt -bios hello.img 
 ```
+
+## Resources
+https://riscv-programming.org/book/riscv-book.html has a lot of details
+https://luplab.gitlab.io/rvcodecjs/

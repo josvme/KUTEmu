@@ -6,12 +6,21 @@
 
   # https://devenv.sh/packages/
   packages = [
-   pkgs.git
-   ];
+    pkgs.git
+    pkgs.SDL2
+    pkgs.SDL2_gfx
+    pkgs.SDL2_ttf
+    pkgs.SDL2_net
+    pkgs.SDL2_sound
+    pkgs.SDL2_mixer
+    pkgs.SDL2_image
+  ];
 
+  env.hardeningDisable = ["all"];
   # https://devenv.sh/languages/
   languages.c.enable = true;
   languages.rust.enable = true;
+  languages.go.enable = true;
 
   # https://devenv.sh/processes/
   # processes.cargo-watch.exec = "cargo-watch";
@@ -34,6 +43,8 @@
   #   "myproj:setup".exec = "mytool build";
   #   "devenv:enterShell".after = [ "myproj:setup" ];
   # };
+
+
 
   # https://devenv.sh/tests/
   enterTest = ''
