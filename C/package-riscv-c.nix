@@ -11,13 +11,12 @@
 # the package itself.
 
 stdenv.mkDerivation {
-  name = "riscv-nix";
+  name = "riscv-c-nix";
 
   # good source filtering is important for caching of builds.
   # It's easier when subprojects have their own distinct subfolders.
     src = lib.sourceByRegex ./. [
-      "^src.*"
-      "^risc-v-bare.*"
+      "^risc-v-c.*"
     ];
 
   # We now list the dependencies similar to the devShell before.
@@ -27,12 +26,12 @@ stdenv.mkDerivation {
   nativeBuildInputs = [ ];
   buildInputs = [ ];
   buildPhase = ''
-    cd risc-v-bare
-    make hello
+    cd risc-v-c
+    make helloc
   '';
   installPhase = ''
     mkdir -p $out/bin
-    cp hellomake $out/bin
+    cp helloc $out/bin
   '';
 
   # Instruct the build process to run tests.

@@ -21,13 +21,15 @@
           # callPackage resolve dependencies for the package.nix inputs, like stdenv based on the used pkgs
           default = pkgs.callPackage ./package.nix { };
           clang = pkgs.callPackage ./package.nix {stdenv = pkgs.clangStdenv;};
-          riscv = pkgs.pkgsCross.riscv32-embedded.callPackage ./package.nix { };
+          riscv-bare = pkgs.pkgsCross.riscv32-embedded.callPackage ./package-riscv-bare.nix { };
+          riscv-c= pkgs.pkgsCross.riscv32.callPackage ./package-riscv-c.nix { };
         };
         # devShells.default describes the default shell with C++, cmake
         devShells = {
           default = config.packages.default;
           clang = config.packages.clang;
-          riscv = config.packages.riscv;
+          riscv = config.packages.riscv-bare;
+          riscvc = config.packages.riscv-c;
         };
       };
       flake = {
