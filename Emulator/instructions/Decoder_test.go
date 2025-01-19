@@ -63,7 +63,7 @@ func TestDecoderInstructions(t *testing.T) {
 				RD:     0b01010,
 				F3:     0b000,
 				RS1:    0b00000,
-				IIM1:   0b000001101000,
+				IIM:    0b000001101000,
 			},
 		},
 		{
@@ -71,29 +71,27 @@ func TestDecoderInstructions(t *testing.T) {
 			want: JI{
 				Opcode: 0b1101111,
 				RD:     0b00000,
-				JIM1:   0b11111001100111111111,
+				JIM:    0b111111111111110011000,
 			},
 		},
 		{
 			inst: 0x00a58023,
 			want: SI{
 				Opcode: 0b0100011,
-				SIM1:   0b00000,
+				SIM:    0b0000000,
 				F3:     0b000,
 				RS1:    0b01011,
 				RS2:    0b01010,
-				SIM2:   0000000,
 			},
 		},
 		{
 			inst: 0x06705063,
 			want: BI{
 				Opcode: 0b1100011,
-				BIM1:   0b00000,
 				F3:     0b101,
 				RS1:    0b00000,
 				RS2:    0b00111,
-				BIM2:   0b0000011,
+				BIM:    0b0000001100000,
 			},
 		},
 		{

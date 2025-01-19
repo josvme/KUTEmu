@@ -5,12 +5,13 @@ type II struct {
 	RD     byte
 	F3     byte
 	RS1    byte
-	IIM1   uint16
+	IIM    uint16
 }
 
 const OP_TOPLEVEL_ARITH = 0b0010011
 const OP_TOPLEVEL_LOAD = 0b0000011
 const OP_TOPLEVEL_JUMP = 0b1101111
+const OP_TOPLEVEL_JUMP_2 = 0b1100111
 const OP_TOPLEVEL_ENVIRON = 0b1110011
 
 func (i II) Operation() string {
@@ -23,11 +24,11 @@ func (i II) Operation() string {
 		return "ori"
 	case i.F3 == 0x7 && i.Opcode == OP_TOPLEVEL_ARITH:
 		return "andi"
-	case i.F3 == 0x1 && i.Opcode == OP_TOPLEVEL_ARITH && immValue(i.IIM1) == 0x00:
+	case i.F3 == 0x1 && i.Opcode == OP_TOPLEVEL_ARITH && immValue(i.IIM) == 0x00:
 		return "slli"
-	case i.F3 == 0x5 && i.Opcode == OP_TOPLEVEL_ARITH && immValue(i.IIM1) == 0x00:
+	case i.F3 == 0x5 && i.Opcode == OP_TOPLEVEL_ARITH && immValue(i.IIM) == 0x00:
 		return "srli"
-	case i.F3 == 0x5 && i.Opcode == OP_TOPLEVEL_ARITH && immValue(i.IIM1) == 0x20:
+	case i.F3 == 0x5 && i.Opcode == OP_TOPLEVEL_ARITH && immValue(i.IIM) == 0x20:
 		return "srai"
 	case i.F3 == 0x2 && i.Opcode == OP_TOPLEVEL_ARITH:
 		return "slti"
@@ -43,11 +44,11 @@ func (i II) Operation() string {
 		return "lbu"
 	case i.F3 == 0x5 && i.Opcode == OP_TOPLEVEL_LOAD:
 		return "lhu"
-	case i.F3 == 0x0 && i.Opcode == OP_TOPLEVEL_JUMP:
+	case i.F3 == 0x0 && i.Opcode == OP_TOPLEVEL_JUMP_2:
 		return "jalr"
-	case i.F3 == 0x0 && i.Opcode == OP_TOPLEVEL_ENVIRON && i.IIM1 == 0x00:
+	case i.F3 == 0x0 && i.Opcode == OP_TOPLEVEL_ENVIRON && i.IIM == 0x00:
 		return "ecall"
-	case i.F3 == 0x0 && i.Opcode == OP_TOPLEVEL_ENVIRON && i.IIM1 == 0x01:
+	case i.F3 == 0x0 && i.Opcode == OP_TOPLEVEL_ENVIRON && i.IIM == 0x01:
 		return "ebreak"
 	default:
 		panic("Unknown Operation")
@@ -83,7 +84,7 @@ func (i II) Decode(inst uint32) Inst {
 		RD:     rd,
 		F3:     f3,
 		RS1:    rs1,
-		IIM1:   iim1,
+		IIM:    iim1,
 	}
 }
 

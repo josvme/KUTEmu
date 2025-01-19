@@ -2,11 +2,10 @@ package instructions
 
 type SI struct {
 	Opcode byte
-	SIM1   byte
 	F3     byte
 	RS1    byte
 	RS2    byte
-	SIM2   byte
+	SIM    uint16
 }
 
 const OP_TOPLEVEL_SI = 0b0100011
@@ -29,25 +28,22 @@ func (i SI) Operation() string {
 
 func (i SI) Decode(inst uint32) Inst {
 	op := decodeOpcode(inst)
-	sim1 := decodeSIM1(inst)
 	f3 := decodeF3(inst)
 	rs1 := decodeRS1(inst)
 	rs2 := decodeRS2(inst)
-	sim2 := decodeSIM2(inst)
+	sim := decodeSIM(inst)
 	return SI{
 		Opcode: op,
-		SIM1:   sim1,
 		F3:     f3,
 		RS1:    rs1,
 		RS2:    rs2,
-		SIM2:   sim2,
+		SIM:    sim,
 	}
 }
 
-func decodeSIM2(inst uint32) byte {
-	return byte(getBitsAsUInt32(inst, 7, 11))
-}
+func decodeSIM(inst uint32) uint16 {
+	upper := uint16(getBitsAsUInt32(inst, 7, 11))
+	lower := uint16(getBitsAsUInt32(inst, 25, 31))
 
-func decodeSIM1(inst uint32) byte {
-	return byte(getBitsAsUInt32(inst, 25, 31))
+	return upper<<7 | lower
 }

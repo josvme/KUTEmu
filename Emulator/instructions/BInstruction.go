@@ -2,11 +2,10 @@ package instructions
 
 type BI struct {
 	Opcode byte
-	BIM1   byte
 	F3     byte
 	RS1    byte
 	RS2    byte
-	BIM2   byte
+	BIM    uint16
 }
 
 const OP_TOPLEVEL_BI = 0b1100011
@@ -35,25 +34,28 @@ func (i BI) Operation() string {
 
 func (i BI) Decode(inst uint32) Inst {
 	op := decodeOpcode(inst)
-	bim1 := decodeBIM1(inst)
+	bim := decodeBIM(inst)
 	f3 := decodeF3(inst)
 	rs1 := decodeRS1(inst)
 	rs2 := decodeRS2(inst)
-	bims2 := decodeBIM2(inst)
 	return BI{
 		Opcode: op,
-		BIM1:   bim1,
 		F3:     f3,
 		RS1:    rs1,
 		RS2:    rs2,
-		BIM2:   bims2,
+		BIM:    bim,
 	}
 }
 
-func decodeBIM1(inst uint32) byte {
-	return byte(getBitsAsUInt32(inst, 7, 11))
-}
-
-func decodeBIM2(inst uint32) byte {
-	return byte(getBitsAsUInt32(inst, 25, 31))
+func decodeBIM(inst uint32) uint16 {
+	b14 := uint16(getBitsAsUInt32(inst, 8, 11))
+	b11 := uint16(getBitsAsUInt32(inst, 7, 7))
+	b105 := uint16(getBitsAsUInt32(inst, 25, 30))
+	b12 := uint16(getBitsAsUInt32(inst, 31, 31))
+	a := b14 << 1
+	b := b11 << 11
+	c := b105 << 5
+	d := b12 << 12
+	e := a | b | c | d
+	return e
 }

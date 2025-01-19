@@ -22,14 +22,14 @@
           default = pkgs.callPackage ./package.nix { };
           clang = pkgs.callPackage ./package.nix {stdenv = pkgs.clangStdenv;};
           riscv-bare = pkgs.pkgsCross.riscv32-embedded.callPackage ./package-riscv-bare.nix { };
-          riscv-c= pkgs.pkgsCross.riscv32.callPackage ./package-riscv-c.nix { };
+          riscv-c= pkgs.pkgsCross.riscv32-embedded.callPackage ./package-riscv-c.nix { };
         };
         # devShells.default describes the default shell with C++, cmake
         devShells = {
           default = config.packages.default;
           clang = config.packages.clang;
           riscv = config.packages.riscv-bare;
-          riscvc = config.packages.riscv-c;
+          riscv-c = config.packages.riscv-c;
         };
       };
       flake = {

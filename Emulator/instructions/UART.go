@@ -6,6 +6,9 @@ type UART struct {
 }
 
 func (u *UART) Write(b byte) error {
+	if b == 0 {
+		return nil
+	}
 	fmt.Printf("%c", b)
 	return nil
 }

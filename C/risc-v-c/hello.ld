@@ -1,13 +1,9 @@
 MEMORY
 {
-   BRAM (RWX) : ORIGIN = 0x80000000, LENGTH = 0x200
+   BRAM (RWX) : ORIGIN = 0x80000000, LENGTH = 128
 }
-SECTIONS
-{
-    everything :
-    {
-	. = ALIGN(4);
-	helloc.o (.text)
-        *(.*)
-    } >BRAM
+SECTIONS {
+  .text : {
+	helloc.o(.text)
+  } >BRAM
 }

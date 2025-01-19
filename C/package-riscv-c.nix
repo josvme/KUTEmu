@@ -32,6 +32,7 @@ stdenv.mkDerivation {
   installPhase = ''
     mkdir -p $out/bin
     cp helloc $out/bin
+    cp hello.img $out/bin
   '';
 
   # Instruct the build process to run tests.

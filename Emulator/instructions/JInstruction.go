@@ -3,7 +3,7 @@ package instructions
 type JI struct {
 	Opcode byte
 	RD     byte
-	JIM1   uint32
+	JIM    uint32
 }
 
 const OP_TOPLEVEL_JI = 0b1101111
@@ -22,10 +22,19 @@ func (i JI) Decode(inst uint32) Inst {
 	return JI{
 		Opcode: op,
 		RD:     rd,
-		JIM1:   jim1,
+		JIM:    jim1,
 	}
 }
 
 func decodeJIM1(inst uint32) uint32 {
-	return getBitsAsUInt32(inst, 12, 31)
+	b1219 := getBitsAsUInt32(inst, 12, 19)
+	b11 := getBitsAsUInt32(inst, 20, 20)
+	b110 := getBitsAsUInt32(inst, 21, 30)
+	b20 := getBitsAsUInt32(inst, 31, 31)
+	a := (b1219 << 12)
+	b := (b11 << 11)
+	c := (b110 << 1)
+	d := (b20 << 20)
+	e := a | b | c | d
+	return e
 }
