@@ -14,6 +14,9 @@ func (i FI) Operation() string {
 	if i.Opcode == 0b0001111 && i.F3 == 0x0 {
 		return "fence"
 	}
+	if i.Opcode == 0b0001111 && i.F3 == 0x1 {
+		return "fence.i"
+	}
 	panic("This shouldn't happen")
 }
 

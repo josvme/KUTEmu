@@ -33,6 +33,10 @@ func DecodeBytes(by [4]byte) Inst {
 	// R
 	case 0b0110011:
 		return RI{}.Decode(c)
+	// R
+	case 0b0101111:
+		return RI{}.Decode(c)
+	// I
 	// I
 	case 0b0010011:
 		return II{}.Decode(c)

@@ -46,10 +46,27 @@ func (i II) Operation() string {
 		return "lhu"
 	case i.F3 == 0x0 && i.Opcode == OP_TOPLEVEL_JUMP_2:
 		return "jalr"
+	// We also Zicsr/Env instructions here.
 	case i.F3 == 0x0 && i.Opcode == OP_TOPLEVEL_ENVIRON && i.IIM == 0x00:
 		return "ecall"
 	case i.F3 == 0x0 && i.Opcode == OP_TOPLEVEL_ENVIRON && i.IIM == 0x01:
 		return "ebreak"
+	case i.F3 == 0x1 && i.Opcode == OP_TOPLEVEL_ENVIRON:
+		return "csrrw"
+	case i.F3 == 0x2 && i.Opcode == OP_TOPLEVEL_ENVIRON:
+		return "csrrs"
+
+	case i.F3 == 0x3 && i.Opcode == OP_TOPLEVEL_ENVIRON:
+		return "csrrc"
+
+	case i.F3 == 0x5 && i.Opcode == OP_TOPLEVEL_ENVIRON:
+		return "csrrwi"
+
+	case i.F3 == 0x6 && i.Opcode == OP_TOPLEVEL_ENVIRON:
+		return "csrrsi"
+
+	case i.F3 == 0x7 && i.Opcode == OP_TOPLEVEL_ENVIRON:
+		return "csrrci"
 	default:
 		panic("Unknown Operation")
 	}

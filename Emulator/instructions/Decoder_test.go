@@ -57,6 +57,17 @@ func TestDecoderInstructions(t *testing.T) {
 			},
 		},
 		{
+			// jalr
+			inst: 0x00008067,
+			want: II{
+				Opcode: 0b1100111,
+				RD:     0b00000,
+				F3:     0b000,
+				RS1:    0b00001,
+				IIM:    0b000000000000,
+			},
+		},
+		{
 			inst: 0x06800513,
 			want: II{
 				Opcode: 0b0010011,
@@ -64,6 +75,17 @@ func TestDecoderInstructions(t *testing.T) {
 				F3:     0b000,
 				RS1:    0b00000,
 				IIM:    0b000001101000,
+			},
+		},
+		{
+			// csrrw
+			inst: 0x30401073,
+			want: II{
+				Opcode: 0b1110011,
+				RD:     0b00000,
+				F3:     0b001,
+				RS1:    0b00000,
+				IIM:    0b001100000100,
 			},
 		},
 		{
