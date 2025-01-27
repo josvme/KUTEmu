@@ -1,5 +1,10 @@
 package instructions
 
+import (
+	"fmt"
+	"os"
+)
+
 type Cpu struct {
 	PC             uint32
 	Registers      [32]uint32
@@ -268,7 +273,15 @@ func executeI(inst II, c *Cpu) {
 		c.PC = c.Registers[inst.RS1] + uint32(int16(inst.IIM<<3)>>3)
 
 	case "ecall":
-		// Switch context to OS
+		if os.Getenv("MODE") == "test" {
+			if c.Registers[10] == 42 {
+				fmt.Fprintln(os.Stdout, fmt.Sprintf("Test Succeeded"))
+			} else {
+				fmt.Fprintln(os.Stdout, fmt.Sprintf("Ecall: testId: %d, Failed", c.Registers[3]))
+			}
+			os.Exit(0)
+		}
+		// If not in test mode Switch context to OS
 		c.PC += 4
 
 	case "ebreak":

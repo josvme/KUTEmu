@@ -21,7 +21,8 @@ func (e *Emulator) Run() {
 		Memory:    memory,
 	}
 	// body, _ := os.ReadFile("./../C/risc-v-c/result/bin/hello.img")
-	body, _ := os.ReadFile("./../C/Image")
+	path := os.Getenv("OBJ_PATH")
+	body, _ := os.ReadFile(path)
 
 	_ = memory.LoadBytes(body, VIRT_DRAM)
 
@@ -40,7 +41,7 @@ func (e *Emulator) Run() {
 		}
 		inst := instructions.DecodeBytes(b)
 
-		fmt.Println(fmt.Sprintf("Executing Bytes: %x, Opcode: %s, Operation: #%v PC: %x ", instructions.TransformLittleToBig(b), inst.Operation(), inst, cpu.PC))
+		//fmt.Println(fmt.Sprintf("Executing Bytes: %x, Opcode: %s, Operation: #%v PC: %x ", instructions.TransformLittleToBig(b), inst.Operation(), inst, cpu.PC))
 
 		_ = cpu.ExecInst(inst)
 
