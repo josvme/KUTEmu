@@ -78,6 +78,28 @@ func TestDecoderInstructions(t *testing.T) {
 			},
 		},
 		{
+			// addi
+			inst: 0x02a00513,
+			want: II{
+				Opcode: 0b0010011,
+				RD:     0b01010,
+				F3:     0b000,
+				RS1:    0b00000,
+				IIM:    0b000000101010,
+			},
+		},
+		{
+			// srai
+			inst: 0x4010d093,
+			want: II{
+				Opcode: 0b0010011,
+				RD:     0b00001,
+				F3:     0b101,
+				RS1:    0b00001,
+				IIM:    0b010000000001,
+			},
+		},
+		{
 			// csrrw
 			inst: 0x30401073,
 			want: II{
@@ -94,6 +116,16 @@ func TestDecoderInstructions(t *testing.T) {
 				Opcode: 0b1101111,
 				RD:     0b00000,
 				JIM:    0b111111111111110011000,
+			},
+		},
+		{
+			inst: 0xfe118e23,
+			want: SI{
+				Opcode: 0b0100011,
+				SIM:    0b111111111100,
+				F3:     0b000,
+				RS1:    0b00011,
+				RS2:    0b00001,
 			},
 		},
 		{
@@ -122,6 +154,14 @@ func TestDecoderInstructions(t *testing.T) {
 				Opcode: 0b0110111,
 				RD:     0b00000,
 				UIM1:   0b00000001011001000011,
+			},
+		},
+		{
+			inst: 0xfffff0b7,
+			want: UI{
+				Opcode: 0b0110111,
+				RD:     0b0001,
+				UIM1:   0b11111111111111111111,
 			},
 		},
 		{

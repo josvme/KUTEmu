@@ -42,8 +42,8 @@ func (i SI) Decode(inst uint32) Inst {
 }
 
 func decodeSIM(inst uint32) uint16 {
-	upper := uint16(getBitsAsUInt32(inst, 7, 11))
-	lower := uint16(getBitsAsUInt32(inst, 25, 31))
+	lower := uint16(getBitsAsUInt32(inst, 7, 11))
+	upper := uint16(getBitsAsUInt32(inst, 25, 31))
 
-	return upper<<7 | lower
+	return upper<<5 | lower
 }

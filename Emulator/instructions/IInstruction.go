@@ -33,7 +33,7 @@ func (i II) Operation() string {
 	case i.F3 == 0x2 && i.Opcode == OP_TOPLEVEL_ARITH:
 		return "slti"
 	case i.F3 == 0x3 && i.Opcode == OP_TOPLEVEL_ARITH:
-		return "sltui"
+		return "sltiu"
 	case i.F3 == 0x0 && i.Opcode == OP_TOPLEVEL_LOAD:
 		return "lb"
 	case i.F3 == 0x1 && i.Opcode == OP_TOPLEVEL_LOAD:

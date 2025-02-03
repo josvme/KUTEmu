@@ -75,11 +75,11 @@ func executeR(inst RI, c *Cpu) {
 		c.PC += 4
 
 	case "sll":
-		c.Registers[inst.RD] = c.Registers[inst.RS1] << c.Registers[inst.RS2]
+		c.Registers[inst.RD] = c.Registers[inst.RS1] << (c.Registers[inst.RS2] & 0x1F)
 		c.PC += 4
 
 	case "srl":
-		c.Registers[inst.RD] = c.Registers[inst.RS1] >> c.Registers[inst.RS2]
+		c.Registers[inst.RD] = c.Registers[inst.RS1] >> (c.Registers[inst.RS2] & 0x1F)
 		c.PC += 4
 
 	// Arithmetic Left shift RS1 by lower 5 bits of RS2
@@ -186,32 +186,34 @@ func executeR(inst RI, c *Cpu) {
 func executeI(inst II, c *Cpu) {
 	switch inst.Operation() {
 	case "addi":
-		c.Registers[inst.RD] = c.Registers[inst.RS1] + uint32(inst.IIM)
+		c.Registers[inst.RD] = c.Registers[inst.RS1] + uint32(int32(uint32(inst.IIM)<<20)>>20)
 		c.PC += 4
 
 	case "xori":
-		c.Registers[inst.RD] = c.Registers[inst.RS1] ^ uint32(inst.IIM)
+		c.Registers[inst.RD] = c.Registers[inst.RS1] ^ uint32(int16(inst.IIM<<4)>>4)
 		c.PC += 4
 
 	case "ori":
-		c.Registers[inst.RD] = c.Registers[inst.RS1] | uint32(inst.IIM)
+		c.Registers[inst.RD] = c.Registers[inst.RS1] | uint32(int16(inst.IIM<<4)>>4)
 		c.PC += 4
 
 	case "andi":
-		c.Registers[inst.RD] = c.Registers[inst.RS1] & uint32(inst.IIM)
+		c.Registers[inst.RD] = c.Registers[inst.RS1] & uint32(int32(uint32(inst.IIM)<<20)>>20)
 		c.PC += 4
 
+	// Shifts should use only last 6 bits
 	case "slli":
-		c.Registers[inst.RD] = c.Registers[inst.RS1] << uint32(inst.IIM) & 0x1F
+		c.Registers[inst.RD] = c.Registers[inst.RS1] << (uint32(inst.IIM) & 0x1F)
 		c.PC += 4
 
 	case "srli":
-		c.Registers[inst.RD] = c.Registers[inst.RS1] >> uint32(inst.IIM) & 0x1F
+		c.Registers[inst.RD] = c.Registers[inst.RS1] >> (uint32(inst.IIM) & 0x1F)
 		c.PC += 4
 
 	// Arithmetic Shift, Golang does arithmetic shifts(msb-ext) for signed and logical for unsigned(zero-ext)
 	case "srai":
-		c.Registers[inst.RD] = uint32(int32(c.Registers[inst.RS1]) >> inst.IIM)
+		// We need bottom 5 bits only
+		c.Registers[inst.RD] = uint32(int32(c.Registers[inst.RS1]) >> ((inst.IIM << 11) >> 11))
 		c.PC += 4
 
 	case "slti":
@@ -224,7 +226,7 @@ func executeI(inst II, c *Cpu) {
 		c.PC += 4
 
 	case "sltiu":
-		if c.Registers[inst.RS1] < uint32(inst.IIM) {
+		if c.Registers[inst.RS1] < uint32(int16(inst.IIM<<4)>>4) {
 			c.Registers[inst.RD] = 1
 		} else {
 			c.Registers[inst.RD] = 0
@@ -233,44 +235,43 @@ func executeI(inst II, c *Cpu) {
 
 	// All Load ones are signed offsets
 	case "lb":
-		rdi := int32(c.Registers[inst.RS1]) + int32(int16(inst.IIM<<3)>>3)
-		existingRD := c.Registers[inst.RD] & 0xFFFFFF00
-		c.Registers[inst.RD] = existingRD | uint32(c.Memory.ReadByte(uint32(rdi)))
+		rdi := int32(c.Registers[inst.RS1]) + int32(int16(inst.IIM<<4)>>4)
+		c.Registers[inst.RD] = uint32(int8(c.Memory.ReadByte(uint32(rdi))))
 		c.PC += 4
 
 	// All Load ones are signed offsets
 	case "lh":
-		rdi := int32(c.Registers[inst.RS1]) + int32(int16(inst.IIM<<3)>>3)
-		existingRD := c.Registers[inst.RD] & 0xFFFF0000
-		c.Registers[inst.RD] = existingRD | uint32(c.Memory.ReadByte(uint32(rdi))) | (uint32(c.Memory.ReadByte(uint32(rdi+1))) << 8)
+		rdi := int32(c.Registers[inst.RS1]) + int32(int16(inst.IIM<<4)>>4)
+		c.Registers[inst.RD] = uint32(int16(uint16(c.Memory.ReadByte(uint32(rdi))) | (uint16(c.Memory.ReadByte(uint32(rdi+1))) << 8)))
 		c.PC += 4
 
 	// All Load ones are signed offsets
 	case "lw":
-		rdi := int32(c.Registers[inst.RS1]) + int32(int16(inst.IIM<<3)>>3)
-		c.Registers[inst.RD] = uint32(c.Memory.ReadByte(uint32(rdi))) |
+		rdi := int32(c.Registers[inst.RS1]) + int32(int16(inst.IIM<<4)>>4)
+		c.Registers[inst.RD] = uint32(int32(uint32(c.Memory.ReadByte(uint32(rdi))) |
 			(uint32(c.Memory.ReadByte(uint32(rdi+1))) << 8) |
 			(uint32(c.Memory.ReadByte(uint32(rdi+2))) << 16) |
-			(uint32(c.Memory.ReadByte(uint32(rdi+3))) << 24)
+			(uint32(c.Memory.ReadByte(uint32(rdi+3))) << 24)))
 		c.PC += 4
 
 	// All Load ones are signed offsets
 	case "lbu":
-		rdi := c.Registers[inst.RS1] + uint32(int16(inst.IIM<<3)>>3)
-		existingRD := c.Registers[inst.RD] & 0xFFFFFF00
-		c.Registers[inst.RD] = existingRD | uint32(c.Memory.ReadByte(rdi))
+		rdi := c.Registers[inst.RS1] + uint32(int16(inst.IIM<<4)>>4)
+		c.Registers[inst.RD] = uint32(c.Memory.ReadByte(rdi))
 		c.PC += 4
 
 	// All Load ones are signed offsets
 	case "lhu":
-		rdi := c.Registers[inst.RS1] + uint32(int16(inst.IIM<<3)>>3)
-		existingRD := c.Registers[inst.RD] & 0xFFFF0000
-		c.Registers[inst.RD] = existingRD | uint32(c.Memory.ReadByte(rdi)) | (uint32(c.Memory.ReadByte(rdi+1)) << 8)
+		rdi := c.Registers[inst.RS1] + uint32(int16(inst.IIM<<4)>>4)
+		k1 := uint32(c.Memory.ReadByte(rdi))
+		k2 := (uint32(c.Memory.ReadByte(rdi+1)) << 8)
+		k := k1 | k2
+		c.Registers[inst.RD] = k
 		c.PC += 4
 
 	case "jalr":
 		c.Registers[inst.RD] = c.PC + 4
-		c.PC = c.Registers[inst.RS1] + uint32(int16(inst.IIM<<3)>>3)
+		c.PC = c.Registers[inst.RS1] + uint32(int16(inst.IIM<<4)>>4)
 
 	case "ecall":
 		if os.Getenv("MODE") == "test" {
@@ -360,20 +361,20 @@ func executeS(inst SI, c *Cpu) {
 	switch inst.Operation() {
 	// All Store ones are signed offsets
 	case "sb":
-		c.Memory.WriteByte(byte(c.Registers[inst.RS2]&uint32(0xFF)), c.Registers[inst.RS1]+uint32(int16(inst.SIM<<4)>>4))
+		c.Memory.WriteByte(byte(c.Registers[int(inst.RS2)]&uint32(0xFF)), c.Registers[int(inst.RS1)]+uint32(int16(inst.SIM<<4)>>4))
 		c.PC += 4
 
 	// All Store ones are signed offsets
 	case "sh":
-		c.Memory.WriteByte(byte(c.Registers[inst.RS2]&uint32(0xFF)), c.Registers[inst.RS1]+uint32(int16(inst.SIM<<4)>>4))
-		c.Memory.WriteByte(byte((c.Registers[inst.RS2]&uint32(0xFF00))>>8), c.Registers[inst.RS1]+uint32(int16(inst.SIM<<4)>>4)+1)
+		c.Memory.WriteByte(byte(c.Registers[int(inst.RS2)]&uint32(0xFF)), c.Registers[int(inst.RS1)]+uint32(int16(inst.SIM<<4)>>4))
+		c.Memory.WriteByte(byte((c.Registers[int(inst.RS2)]&uint32(0xFF00))>>8), c.Registers[int(inst.RS1)]+uint32(int16(inst.SIM<<4)>>4)+1)
 		c.PC += 4
 
 	case "sw":
-		c.Memory.WriteByte(byte(c.Registers[inst.RS2]&uint32(0xFF)), c.Registers[inst.RS1]+uint32(int16(inst.SIM<<4)>>4))
-		c.Memory.WriteByte(byte((c.Registers[inst.RS2]&uint32(0xFF00))>>8), c.Registers[inst.RS1]+uint32(int16(inst.SIM<<4)>>4)+1)
-		c.Memory.WriteByte(byte((c.Registers[inst.RS2]&uint32(0xFF0000))>>16), c.Registers[inst.RS1]+uint32(int16(inst.SIM<<4)>>4)+2)
-		c.Memory.WriteByte(byte((c.Registers[inst.RS2]&uint32(0xFF000000))>>24), c.Registers[inst.RS1]+uint32(int16(inst.SIM<<4)>>4)+3)
+		c.Memory.WriteByte(byte(c.Registers[int(inst.RS2)]&uint32(0xFF)), c.Registers[int(inst.RS1)]+uint32(int16(inst.SIM<<4)>>4))
+		c.Memory.WriteByte(byte((c.Registers[int(inst.RS2)]&uint32(0xFF00))>>8), c.Registers[int(inst.RS1)]+uint32(int16(inst.SIM<<4)>>4)+1)
+		c.Memory.WriteByte(byte((c.Registers[int(inst.RS2)]&uint32(0xFF0000))>>16), c.Registers[int(inst.RS1)]+uint32(int16(inst.SIM<<4)>>4)+2)
+		c.Memory.WriteByte(byte((c.Registers[int(inst.RS2)]&uint32(0xFF000000))>>24), c.Registers[int(inst.RS1)]+uint32(int16(inst.SIM<<4)>>4)+3)
 		c.PC += 4
 	}
 }
@@ -393,16 +394,14 @@ func executeB(inst BI, c *Cpu) {
 			c.PC += 4
 		}
 	case "blt":
-		if c.Registers[inst.RS1] < c.Registers[inst.RS2] {
-			// We ignore Overflows here
-			c.PC = uint32(int32(c.PC) + int32(inst.BIM))
+		if int32(c.Registers[inst.RS1]) < int32(c.Registers[inst.RS2]) {
+			c.PC = c.PC + uint32(int32(inst.BIM))
 		} else {
 			c.PC += 4
 		}
 	case "bge":
-		if c.Registers[inst.RS1] >= c.Registers[inst.RS2] {
-			// We ignore Overflows here
-			c.PC = uint32(int32(c.PC) + int32(inst.BIM))
+		if int32(c.Registers[inst.RS1]) >= int32(c.Registers[inst.RS2]) {
+			c.PC = c.PC + uint32(int32(inst.BIM))
 		} else {
 			c.PC += 4
 		}
@@ -425,7 +424,7 @@ func executeJ(inst JI, c *Cpu) {
 	switch inst.Operation() {
 	case "jal":
 		c.Registers[inst.RD] = c.PC + 4
-		c.PC += uint32(int32(inst.JIM<<11) >> 11)
+		c.PC += uint32(int32(inst.JIM<<12) >> 12)
 	}
 }
 
@@ -436,7 +435,7 @@ func executeU(inst UI, c *Cpu) {
 		c.Registers[inst.RD] = inst.UIM1 << 12
 		c.PC += 4
 	case "auipc":
-		c.Registers[inst.RD] = c.PC + inst.UIM1<<12
+		c.Registers[inst.RD] = c.PC + uint32(int32(inst.UIM1<<12))
 		c.PC += 4
 	}
 }

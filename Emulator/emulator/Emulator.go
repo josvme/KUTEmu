@@ -10,13 +10,13 @@ type Emulator struct {
 	cpu instructions.Cpu
 }
 
-const VIRT_DRAM = 0x80000000
+const VIRT_DRAM = 0x00000000
 const VIRT_VIRTIO = 0x10001000
 
 func (e *Emulator) Run() {
 	memory := instructions.Memory{Map: make(map[uint32]byte)}
 	cpu := instructions.Cpu{
-		PC:        0x80000000,
+		PC:        0x00000000,
 		Registers: [32]uint32{},
 		Memory:    memory,
 	}
