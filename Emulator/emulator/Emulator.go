@@ -16,9 +16,10 @@ const VIRT_VIRTIO = 0x10001000
 func (e *Emulator) Run() {
 	memory := instructions.Memory{Map: make(map[uint32]byte)}
 	cpu := instructions.Cpu{
-		PC:        0x00000000,
-		Registers: [32]uint32{},
-		Memory:    memory,
+		PC:           0x00000000,
+		Registers:    [32]uint32{},
+		Memory:       memory,
+		CurrentState: 0,
 	}
 	// body, _ := os.ReadFile("./../C/risc-v-c/result/bin/hello.img")
 	path := os.Getenv("OBJ_PATH")
@@ -35,7 +36,7 @@ func (e *Emulator) Run() {
 
 		// fail on empty instructions
 		if b[0] == 0 && b[1] == 0 && b[2] == 0 && b[3] == 0 {
-			fmt.Printf("Fail: Empty instruction. PC: %x\n", cpu.PC)
+			fmt.Printf("\nFail: Empty instruction. PC: %x\n", cpu.PC)
 			cpu.PC += 4
 			break
 		}

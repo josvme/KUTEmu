@@ -9,8 +9,10 @@ type Cpu struct {
 	PC             uint32
 	Registers      [32]uint32
 	Memory         Memory
-	CSRRegisters   [4096]uint32
+	CSR            CSR
 	AtomicReserved bool
+	// 3 for machine, 1 for supervisor, 2 for hypervisor, 0 for user
+	CurrentState uint8
 }
 
 func (c *Cpu) ExecInst(i Inst) error {
@@ -292,41 +294,41 @@ func executeI(inst II, c *Cpu) {
 	case "csrrw":
 		// Ignore reading values / registers twice
 		if inst.RD != 0x0 {
-			c.Registers[inst.RD] = c.CSRRegisters[inst.IIM]
+			c.Registers[inst.RD] = c.CSR.Registers[inst.IIM]
 		}
-		c.CSRRegisters[inst.IIM] = c.Registers[inst.RS1]
+		c.CSR.Registers[inst.IIM] = c.Registers[inst.RS1]
 		c.PC += 4
 
 	// For all i or immediate instructions for csr RD is a 5 bit field
 	case "csrrwi":
 		if inst.RD != 0x0 {
-			c.Registers[inst.RD] = c.CSRRegisters[inst.IIM]
+			c.Registers[inst.RD] = c.CSR.Registers[inst.IIM]
 		}
-		c.CSRRegisters[inst.IIM] = uint32(inst.RS1)
+		c.CSR.Registers[inst.IIM] = uint32(inst.RS1)
 		c.PC += 4
 
 	case "csrrs":
 		// We need more checks here to see if we can indeed modify the registers based on privilege level
 		// at which processor is working
 		if inst.RD != 0x0 {
-			c.Registers[inst.RD] = c.CSRRegisters[inst.IIM]
+			c.Registers[inst.RD] = c.CSR.Registers[inst.IIM]
 		}
-		csrExisting := c.CSRRegisters[inst.IIM]
+		csrExisting := c.CSR.Registers[inst.IIM]
 		csrBitmask := c.Registers[inst.RS1]
-		c.CSRRegisters[inst.IIM] = csrBitmask | csrExisting
+		c.CSR.Registers[inst.IIM] = csrBitmask | csrExisting
 		c.PC += 4
 
 	case "csrrsi":
 		// We need more checks here to see if we can indeed modify the registers based on privilege level
 		// at which processor is working
 		if inst.RD != 0x0 {
-			c.Registers[inst.RD] = c.CSRRegisters[inst.IIM]
+			c.Registers[inst.RD] = c.CSR.Registers[inst.IIM]
 		}
 		// RS1 has the immediate values
 		if inst.RS1 != 0x0 {
-			csrExisting := c.CSRRegisters[inst.IIM]
+			csrExisting := c.CSR.Registers[inst.IIM]
 			csrBitmask := uint32(inst.RS1)
-			c.CSRRegisters[inst.IIM] = csrBitmask | csrExisting
+			c.CSR.Registers[inst.IIM] = csrBitmask | csrExisting
 		}
 		c.PC += 4
 
@@ -334,24 +336,24 @@ func executeI(inst II, c *Cpu) {
 		// We need more checks here to see if we can indeed modify the registers based on privilege level
 		// at which processor is working
 		if inst.RD != 0x0 {
-			c.Registers[inst.RD] = c.CSRRegisters[inst.IIM]
+			c.Registers[inst.RD] = c.CSR.Registers[inst.IIM]
 		}
-		csrExisting := c.CSRRegisters[inst.IIM]
+		csrExisting := c.CSR.Registers[inst.IIM]
 		csrBitmask := c.Registers[inst.RS1]
-		c.CSRRegisters[inst.IIM] = csrExisting & ^csrBitmask
+		c.CSR.Registers[inst.IIM] = csrExisting & ^csrBitmask
 		c.PC += 4
 
 	case "csrrci":
 		// We need more checks here to see if we can indeed modify the registers based on privilege level
 		// at which processor is working
 		if inst.RD != 0x0 {
-			c.Registers[inst.RD] = c.CSRRegisters[inst.IIM]
+			c.Registers[inst.RD] = c.CSR.Registers[inst.IIM]
 		}
 
 		if inst.RS1 != 0x0 {
-			csrExisting := c.CSRRegisters[inst.IIM]
+			csrExisting := c.CSR.Registers[inst.IIM]
 			csrBitmask := uint32(inst.RS1)
-			c.CSRRegisters[inst.IIM] = csrExisting & ^csrBitmask
+			c.CSR.Registers[inst.IIM] = csrExisting & ^csrBitmask
 		}
 		c.PC += 4
 	}
