@@ -2,7 +2,7 @@
 
 for i in *.s;
 do
-  $AS -march=rv32ia -mabi=ilp32 -o $i.o -c $i > /dev/null 2>&1
+  $AS -march=rv32imzicsr -mabi=ilp32 -o $i.o -c $i > /dev/null 2>&1
   $LD -T inst.ld --no-dynamic-linker -m elf32lriscv -static -s -o bins/$i.bin $i.o > /dev/null 2>&1
   retVal=$?
   if [ $retVal -ne 0 ]; then
