@@ -108,6 +108,18 @@ func CanRead(mode uint8, csrReg uint32) bool {
 }
 
 func GetValue(csrReg uint32) uint32 {
+	switch {
+	case csrReg == MISA:
+		return (1 << 30) | 1 | (1 << 8) | (0 << 18) | (1 << 20) // 18 is supervisor mode
+	case csrReg == MVENDORID:
+		return 0
+	case csrReg == MARCHID:
+		return 0
+	case csrReg == MIMPID:
+		return 0
+	case csrReg == MHARTID:
+		return 0 // Single core system
+	}
 	return 0
 }
 
