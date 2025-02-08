@@ -14,6 +14,9 @@
     pkgs.SDL2_sound
     pkgs.SDL2_mixer
     pkgs.SDL2_image
+    pkgs.clang
+    pkgs.llvm
+    pkgs.lld
   ];
 
   env.hardeningDisable = ["all"];

@@ -18,3 +18,7 @@ api/
 # Temporary
 T/
 Tutorial/
+/C/.gdb_history
+/C/linux/Linux518
+/C/tests/riscv
+/Emulator/riscv
