@@ -1,7 +1,7 @@
 ENTRY(boot)
 
 SECTIONS {
-    . = 0x80200000;
+    . = 0x80200000; /* OpenSBI simply jumps here */
 
     .text :{
         KEEP(*(.text.boot));
