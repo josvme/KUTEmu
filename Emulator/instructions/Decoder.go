@@ -69,6 +69,6 @@ func DecodeBytes(by [4]byte) Inst {
 		return FI{}.Decode(c)
 
 	default:
-		panic(fmt.Sprintf("Unknown instruction %v", c))
+		panic(fmt.Sprintf("Unknown instruction 0x%X", c))
 	}
 }

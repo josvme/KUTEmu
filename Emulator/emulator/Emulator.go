@@ -10,22 +10,27 @@ type Emulator struct {
 	cpu instructions.Cpu
 }
 
-const VIRT_DRAM = 0x00000000
+const VIRT_DRAM = 0x80000000
+const VIRT_OPENSBI_START = 0x80200000
 const VIRT_VIRTIO = 0x10001000
 
 func (e *Emulator) Run() {
 	memory := instructions.Memory{Map: make(map[uint32]byte)}
 	cpu := instructions.Cpu{
-		PC:           0x00000000,
+		PC:           0x80000000,
 		Registers:    [32]uint32{},
 		Memory:       memory,
 		CurrentState: 0,
 	}
-	// body, _ := os.ReadFile("./../C/risc-v-c/result/bin/hello.img")
-	path := os.Getenv("OBJ_PATH")
-	body, _ := os.ReadFile(path)
+	//path := os.Getenv("OBJ_PATH")
+	//body, _ := os.ReadFile(path)
 
+	// Load OpenSBI
+	body, _ := os.ReadFile("./../C/OS/fw_dynamic.bin")
 	_ = memory.LoadBytes(body, VIRT_DRAM)
+
+	body_kern, _ := os.ReadFile("./../C/OS/kernel.img")
+	_ = memory.LoadBytes(body_kern, VIRT_OPENSBI_START)
 
 	var b [4]byte
 	for {
@@ -42,7 +47,7 @@ func (e *Emulator) Run() {
 		}
 		inst := instructions.DecodeBytes(b)
 
-		//fmt.Println(fmt.Sprintf("Executing Bytes: %x, Opcode: %s, Operation: #%v PC: %x ", instructions.TransformLittleToBig(b), inst.Operation(), inst, cpu.PC))
+		fmt.Println(fmt.Sprintf("Executing Bytes: %x, Opcode: %s, Operation: #%v PC: %x ", instructions.TransformLittleToBig(b), inst.Operation(), inst, cpu.PC))
 
 		_ = cpu.ExecInst(inst)
 
