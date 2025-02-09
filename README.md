@@ -9,3 +9,6 @@ export PLATFORM_RISCV_ISA=rv32ima
 export PLATFORM_RISCV_XLEN=32
 make LLVM=1 PLATFORM=generic
 ```
+
+## TODO:
+Combine all CSR registers which are shared.

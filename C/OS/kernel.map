@@ -1,7 +1,7 @@
      VMA      LMA     Size Align Out     In      Symbol
        0        0 80200000     1 . = 0x80200000
 80200000 80200000      214     2 .text
-80200000 80200000        e     2         /tmp/kernel-9da611.o:(.text.boot)
+80200000 80200000        e     2         /tmp/kernel-21ccfc.o:(.text.boot)
 80200000 80200000        0     1                 
 80200000 80200000        0     1                 
 80200000 80200000        0     1                 $x.1
@@ -9,7 +9,7 @@
 80200000 80200000        e     1                 boot
 8020000e 8020000e        0     1                 
 8020000e 8020000e        0     1                 
-8020000e 8020000e       60     2         /tmp/kernel-9da611.o:(.text)
+8020000e 8020000e       60     2         /tmp/kernel-21ccfc.o:(.text)
 8020000e 8020000e        0     1                 
 8020000e 8020000e        0     1                 
 8020000e 8020000e        0     1                 $x.0
@@ -53,7 +53,7 @@
 8020006c 8020006c        0     1                 
 8020006e 8020006e        0     1                 
 8020006e 8020006e        0     1                 
-8020006e 8020006e      1a6     2         /tmp/common-10b14f.o:(.text)
+8020006e 8020006e      1a6     2         /tmp/common-fc4a93.o:(.text)
 8020006e 8020006e        0     1                 
 8020006e 8020006e        0     1                 
 8020006e 8020006e        0     1                 $x.0
@@ -198,7 +198,7 @@
 80200248 80200248    20000     1 . += 128 * 1024
 80220248 80220248        0     1 __stack_top = .
        0        0      261     1 .debug_loc
-       0        0       c7     1         /tmp/kernel-9da611.o:(.debug_loc)
+       0        0       c7     1         /tmp/kernel-21ccfc.o:(.debug_loc)
        0        0        0     1                 
        0        0        0     1                 $d.3
       1b       1b        0     1                 
@@ -206,7 +206,7 @@
       51       51        0     1                 
       6e       6e        0     1                 
       aa       aa        0     1                 
-      c7       c7      19a     1         /tmp/common-10b14f.o:(.debug_loc)
+      c7       c7      19a     1         /tmp/common-fc4a93.o:(.debug_loc)
       c7       c7        0     1                 
       c7       c7        0     1                 $d.2
       e5       e5        0     1                 
@@ -216,20 +216,20 @@
      1d6      1d6        0     1                 
      236      236        0     1                 
        0        0      293     1 .debug_abbrev
-       0        0      1a6     1         /tmp/kernel-9da611.o:(.debug_abbrev)
+       0        0      1a6     1         /tmp/kernel-21ccfc.o:(.debug_abbrev)
        0        0        0     1                 $d.4
-     1a6      1a6       ed     1         /tmp/common-10b14f.o:(.debug_abbrev)
+     1a6      1a6       ed     1         /tmp/common-fc4a93.o:(.debug_abbrev)
      1a6      1a6        0     1                 $d.3
        0        0      4fe     1 .debug_info
-       0        0      350     1         /tmp/kernel-9da611.o:(.debug_info)
+       0        0      350     1         /tmp/kernel-21ccfc.o:(.debug_info)
        0        0        0     1                 $d.5
-     350      350      1ae     1         /tmp/common-10b14f.o:(.debug_info)
+     350      350      1ae     1         /tmp/common-fc4a93.o:(.debug_info)
      350      350        0     1                 $d.4
        0        0       30     1 .debug_ranges
-       0        0       18     1         /tmp/kernel-9da611.o:(.debug_ranges)
+       0        0       18     1         /tmp/kernel-21ccfc.o:(.debug_ranges)
        0        0        0     1                 
        0        0        0     1                 $d.6
-      18       18       18     1         /tmp/common-10b14f.o:(.debug_ranges)
+      18       18       18     1         /tmp/common-fc4a93.o:(.debug_ranges)
       18       18        0     1                 
       18       18        0     1                 $d.5
        0        0      15c     1 .debug_str
@@ -239,17 +239,17 @@
        0        0       2b     1 .riscv.attributes
        0        0       2b     1         <internal>:(.riscv.attributes)
        0        0       b0     4 .debug_frame
-       0        0       6c     4         /tmp/kernel-9da611.o:(.debug_frame)
+       0        0       6c     4         /tmp/kernel-21ccfc.o:(.debug_frame)
        0        0        0     1                 
        0        0        0     1                 $d.10
-      6c       6c       44     4         /tmp/common-10b14f.o:(.debug_frame)
+      6c       6c       44     4         /tmp/common-fc4a93.o:(.debug_frame)
       6c       6c        0     1                 
       6c       6c        0     1                 $d.9
        0        0      342     1 .debug_line
-       0        0       e1     1         /tmp/kernel-9da611.o:(.debug_line)
+       0        0       e1     1         /tmp/kernel-21ccfc.o:(.debug_line)
        0        0        0     1                 .Lline_table_start0
        0        0        0     1                 $d.11
-      e1       e1      261     1         /tmp/common-10b14f.o:(.debug_line)
+      e1       e1      261     1         /tmp/common-fc4a93.o:(.debug_line)
       e1       e1        0     1                 .Lline_table_start0
       e1       e1        0     1                 $d.10
        0        0     10d0     4 .symtab

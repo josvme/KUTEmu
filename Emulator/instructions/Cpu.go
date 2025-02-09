@@ -12,7 +12,7 @@ type Cpu struct {
 	CSR            CSR
 	AtomicReserved bool
 	// 3 for machine, 1 for supervisor, 2 for hypervisor, 0 for user
-	CurrentState uint8
+	CurrentMode uint32
 }
 
 func (c *Cpu) ExecInst(i Inst) error {
@@ -41,6 +41,12 @@ func (c *Cpu) ExecInst(i Inst) error {
 		ins := i.(FI)
 		executeF(ins, c)
 	}
+	return nil
+}
+
+func (c *Cpu) HandleInterrupts() error {
+	c.CSR.Registers[MIP] = 1
+	// Handle interrupts
 	return nil
 }
 
@@ -276,7 +282,7 @@ func executeI(inst II, c *Cpu) {
 		c.PC = c.Registers[inst.RS1] + uint32(int16(inst.IIM<<4)>>4)
 
 	case "ecall":
-		if os.Getenv("MODE") == "test" {
+		if os.Getenv("MODE") == "test" || true {
 			if c.Registers[10] == 42 {
 				fmt.Fprintln(os.Stdout, fmt.Sprintf("Test Succeeded"))
 			} else {
@@ -293,69 +299,86 @@ func executeI(inst II, c *Cpu) {
 
 	case "csrrw":
 		// Ignore reading values / registers twice
-		if inst.RD != 0x0 {
-			c.Registers[inst.RD] = c.CSR.Registers[inst.IIM]
-		}
-		c.CSR.Registers[inst.IIM] = c.Registers[inst.RS1]
+		c.Registers[inst.RD] = c.CSR.GetValue(uint32(inst.IIM), c.CurrentMode, c)
+		c.CSR.SetValue(uint32(inst.IIM), c.Registers[inst.RS1], c.CurrentMode, c)
 		c.PC += 4
 
 	// For all i or immediate instructions for csr RD is a 5 bit field
 	case "csrrwi":
-		if inst.RD != 0x0 {
-			c.Registers[inst.RD] = c.CSR.Registers[inst.IIM]
-		}
-		c.CSR.Registers[inst.IIM] = uint32(inst.RS1)
+		c.Registers[inst.RD] = c.CSR.GetValue(uint32(inst.IIM), c.CurrentMode, c)
+		c.CSR.SetValue(uint32(inst.IIM), uint32(inst.RS1), c.CurrentMode, c)
 		c.PC += 4
 
 	case "csrrs":
 		// We need more checks here to see if we can indeed modify the registers based on privilege level
 		// at which processor is working
-		if inst.RD != 0x0 {
-			c.Registers[inst.RD] = c.CSR.Registers[inst.IIM]
-		}
-		csrExisting := c.CSR.Registers[inst.IIM]
+		c.Registers[inst.RD] = c.CSR.GetValue(uint32(inst.IIM), c.CurrentMode, c)
+		csrExisting := c.CSR.GetValue(uint32(inst.IIM), c.CurrentMode, c)
 		csrBitmask := c.Registers[inst.RS1]
-		c.CSR.Registers[inst.IIM] = csrBitmask | csrExisting
+		c.CSR.SetValue(uint32(inst.IIM), csrBitmask|csrExisting, c.CurrentMode, c)
 		c.PC += 4
 
 	case "csrrsi":
 		// We need more checks here to see if we can indeed modify the registers based on privilege level
 		// at which processor is working
-		if inst.RD != 0x0 {
-			c.Registers[inst.RD] = c.CSR.Registers[inst.IIM]
-		}
+		c.Registers[inst.RD] = c.CSR.GetValue(uint32(inst.IIM), c.CurrentMode, c)
 		// RS1 has the immediate values
-		if inst.RS1 != 0x0 {
-			csrExisting := c.CSR.Registers[inst.IIM]
-			csrBitmask := uint32(inst.RS1)
-			c.CSR.Registers[inst.IIM] = csrBitmask | csrExisting
-		}
+		csrExisting := c.CSR.GetValue(uint32(inst.IIM), c.CurrentMode, c)
+		csrBitmask := uint32(inst.RS1)
+		c.CSR.SetValue(uint32(inst.IIM), csrBitmask|csrExisting, c.CurrentMode, c)
 		c.PC += 4
 
 	case "csrrc":
 		// We need more checks here to see if we can indeed modify the registers based on privilege level
 		// at which processor is working
-		if inst.RD != 0x0 {
-			c.Registers[inst.RD] = c.CSR.Registers[inst.IIM]
-		}
-		csrExisting := c.CSR.Registers[inst.IIM]
+		c.Registers[inst.RD] = c.CSR.GetValue(uint32(inst.IIM), c.CurrentMode, c)
+		csrExisting := c.CSR.GetValue(uint32(inst.IIM), c.CurrentMode, c)
 		csrBitmask := c.Registers[inst.RS1]
-		c.CSR.Registers[inst.IIM] = csrExisting & ^csrBitmask
+		c.CSR.SetValue(uint32(inst.IIM), csrExisting & ^csrBitmask, c.CurrentMode, c)
 		c.PC += 4
 
 	case "csrrci":
 		// We need more checks here to see if we can indeed modify the registers based on privilege level
 		// at which processor is working
-		if inst.RD != 0x0 {
-			c.Registers[inst.RD] = c.CSR.Registers[inst.IIM]
-		}
-
-		if inst.RS1 != 0x0 {
-			csrExisting := c.CSR.Registers[inst.IIM]
-			csrBitmask := uint32(inst.RS1)
-			c.CSR.Registers[inst.IIM] = csrExisting & ^csrBitmask
-		}
+		c.Registers[inst.RD] = c.CSR.GetValue(uint32(inst.IIM), c.CurrentMode, c)
+		csrExisting := c.CSR.GetValue(uint32(inst.IIM), c.CurrentMode, c)
+		csrBitmask := uint32(inst.RS1)
+		c.CSR.SetValue(uint32(inst.IIM), csrExisting & ^csrBitmask, c.CurrentMode, c)
 		c.PC += 4
+	case "sret":
+		statusReg := ToMStatusReg(c.CSR.GetValue(SSTATUS, c.CurrentMode, c))
+		statusReg.sie = statusReg.spie
+		// restore mode of processor
+		c.CurrentMode = statusReg.spp
+		statusReg.spie = 1
+		// Set to U-Mode
+		statusReg.spp = 0
+		c.CSR.Registers[SSTATUS] = FromMStatusReg(statusReg)
+		// change return PC
+		c.PC = c.CSR.Registers[SEPC]
+	case "mret":
+		statusReg := ToMStatusReg(c.CSR.GetValue(MSTATUS, c.CurrentMode, c))
+		statusReg.mie = statusReg.mpie
+		// restore mode of processor
+		c.CurrentMode = statusReg.mpp
+		statusReg.mpie = 1
+		if statusReg.mpp != 3 {
+			statusReg.mprv = 0
+		}
+		// Set to U-Mode
+		statusReg.mpp = 0
+		c.CSR.Registers[MSTATUS] = FromMStatusReg(statusReg)
+		// change return PC
+		c.PC = c.CSR.Registers[MEPC]
+	case "wfi":
+		// Wait until interrupt comes
+		mip := c.CSR.Registers[MIP]
+		if mip > 0 {
+			c.PC += 4
+		}
+		// If nothing then simply wait
+	default:
+		panic("running instruction failed")
 	}
 }
 

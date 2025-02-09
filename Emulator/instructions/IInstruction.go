@@ -67,6 +67,12 @@ func (i II) Operation() string {
 
 	case i.F3 == 0x7 && i.Opcode == OP_TOPLEVEL_ENVIRON:
 		return "csrrci"
+	case i.F3 == 0x0 && i.Opcode == OP_TOPLEVEL_ENVIRON && i.IIM == 0b000100000010:
+		return "sret"
+	case i.F3 == 0x0 && i.Opcode == OP_TOPLEVEL_ENVIRON && i.IIM == 0b001100000010:
+		return "mret"
+	case i.F3 == 0x0 && i.Opcode == OP_TOPLEVEL_ENVIRON && i.IIM == 0b000100000101:
+		return "wfi"
 	default:
 		panic("Unknown Operation")
 	}

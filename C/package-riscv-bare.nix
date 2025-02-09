@@ -5,6 +5,7 @@
 # description
 { lib
 , stdenv
+, pkgs
 }:
 
 # stdenv.mkDerivation now accepts a list of named parameters that describe
@@ -23,7 +24,7 @@ stdenv.mkDerivation {
   # Distinguishing between `nativeBuildInputs` (runnable on the host
   # at compile time) and normal `buildInputs` (runnable on target
   # platform at run time) is an important preparation for cross-compilation.
-  nativeBuildInputs = [ ];
+  nativeBuildInputs = [pkgs.buildPackages.gdb];
   buildInputs = [ ];
   buildPhase = ''
     cd risc-v-bare
