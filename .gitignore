@@ -22,3 +22,6 @@ Tutorial/
 /C/linux/Linux518
 /C/tests/riscv
 /Emulator/riscv
+
+.gdb_history
+trace.log

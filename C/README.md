@@ -37,6 +37,27 @@ And call show_vars once program is started, as display works once program is sta
 
 Note: Above we use .bin for gdb (elf file with symbols) and .img (flat file) for qemu
 
+
+## GDB basic
+#### View memory
+```shell
+x/16xb 0x00001028
+```
+#### View Registers
+```shell
+info registers
+info registers $mtvec
+```
+
+#### Watch write to memory
+```shell
+watch *0x...
+```
 ## Resources
 https://riscv-programming.org/book/riscv-book.html has a lot of details
 https://luplab.gitlab.io/rvcodecjs/
+
+0x1028: 0x4942534f      0x00000002      0x00000000      0x00000001
+0x1038: 0x00000000      0x00000000      0x00000000      0x00000000
+0x1048: 0x00000000      0x00000000      0x00000000      0x00000000
+0x1058: 0x00000000      0x00000000      0x00000000      0x00000000

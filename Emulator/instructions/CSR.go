@@ -67,6 +67,9 @@ const MCYCLE = 0xB00
 const MINSTRET = 0xB02
 const MCYCLEH = 0xCB80
 
+// More
+const MSTATUSH = 0x310
+
 type CSR struct {
 	Registers [4096]uint32
 }
@@ -213,8 +216,9 @@ func (csr *CSR) isCSRValid(reg uint32) bool {
 	v := []int{USTATUS, UIE, UTVEC, USCRATCH, UEPC, UCAUSE, UTVAL, UIP, CYCLE, TIME, INSTRET, CYCLEH, TIMEH,
 		SSTATUS, SEDELEG, SIDELEG, SIE, STVEC, SCOUNTEREN, SSCRATCH, SEPC, SCAUSE, STVAL, SIP, SRW,
 		MVENDORID, MARCHID, MIMPID, MHARTID, MSTATUS, MISA, MEDELEG, MIDELEG, MIE, MTVEC, MCOUNTEREN,
-		MSCRATCH, MEPC, MCAUSE, MTVAL, MIP, MCYCLE, MINSTRET, MCYCLEH}
-	return slices.Contains(v, r)
+		MSCRATCH, MEPC, MCAUSE, MTVAL, MIP, MCYCLE, MINSTRET, MCYCLEH, MSTATUSH}
+	t := slices.Contains(v, r)
+	return t
 }
 
 func (csr *CSR) handleIllegalGet(reg uint32, cpulevel uint32, exception uint32, cpu *Cpu) {

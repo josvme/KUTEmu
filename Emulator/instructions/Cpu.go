@@ -44,9 +44,66 @@ func (c *Cpu) ExecInst(i Inst) error {
 	return nil
 }
 
-func (c *Cpu) HandleInterrupts() error {
-	c.CSR.Registers[MIP] = 1
+func (cpu *Cpu) HandleInterrupts(inst string) error {
+	if inst == "wfi" && cpu.CSR.Registers[MIP] != 1 {
+		cpu.CSR.Registers[MIP] = 1
+
+		csr := cpu.CSR
+		mode := cpu.CurrentMode
+		// set mcause & scause register
+		switch mode {
+		case 1:
+			csr.Registers[SCAUSE] = csr.Registers[SCAUSE] | 1<<31 | 1 // supervisor software interrupt
+		default:
+			csr.Registers[MCAUSE] = csr.Registers[MCAUSE] | 1<<31 | 3 // machine software interrupt
+		}
+		return nil
+	}
+	// Implement only direct mode now
+
 	// Handle interrupts
+	// Save pc to mepc / corresponding
+	// move PC to interrupt / exception handler after checking mdeleg and meip / corresponding registers
+	// mtvec has different address based on modes see page 24, https://people.eecs.berkeley.edu/~krste/papers/riscv-priv-spec-1.7.pdf
+	// A trap in privilege level P causes a jump to the address mtvec + P ×0x40. Non-maskable interrupts
+	//cause a jump to address mtvec + 0xFC.
+
+	if cpu.CSR.Registers[MIP] == 1 {
+		csr := cpu.CSR
+		mode := cpu.CurrentMode
+
+		// check if delegation is added for exceptions
+		midelegReg := csr.Registers[MIDELEG]
+		// This should be checked first
+		if midelegReg&uint32(1<<3) == 1 {
+			// go to supervisor trap
+			csr.Registers[SEPC] = cpu.PC
+			sstatus := ToMStatusReg(SSTATUS)
+			sstatus.spp = mode
+			csr.Registers[SSTATUS] = FromMStatusReg(sstatus)
+			// This is very crappy, to accomodate +4
+			stvec := ToMtvecReg(csr.Registers[STVEC])
+			cpu.PC = stvec.base
+			cpu.CurrentMode = 1
+			// These are just wrong
+			cpu.CSR.Registers[SIP] = 0
+			cpu.CSR.Registers[MIP] = 0
+		} else {
+			// run machine trap
+			csr.Registers[MEPC] = cpu.PC
+			mstatus := ToMStatusReg(MSTATUS)
+			mstatus.mpp = mode
+			csr.Registers[MSTATUS] = FromMStatusReg(mstatus)
+			// This is very crappy, to accomodate +4
+			mtvec := ToMtvecReg(csr.Registers[MTVEC])
+			cpu.PC = mtvec.base
+			cpu.CurrentMode = 3
+			// only for interrupts, software
+			cpu.PC = (mtvec.base + 4*3) - 4
+			cpu.CSR.Registers[MIP] = 0
+		}
+
+	}
 	return nil
 }
 
@@ -278,8 +335,10 @@ func executeI(inst II, c *Cpu) {
 		c.PC += 4
 
 	case "jalr":
+		// This is required because RS1 and RD can be same register
+		oldV := c.Registers[inst.RS1]
 		c.Registers[inst.RD] = c.PC + 4
-		c.PC = c.Registers[inst.RS1] + uint32(int16(inst.IIM<<4)>>4)
+		c.PC = oldV + uint32(int16(inst.IIM<<4)>>4)
 
 	case "ecall":
 		if os.Getenv("MODE") == "test" || true {
@@ -420,13 +479,13 @@ func executeB(inst BI, c *Cpu) {
 		}
 	case "blt":
 		if int32(c.Registers[inst.RS1]) < int32(c.Registers[inst.RS2]) {
-			c.PC = c.PC + uint32(int32(inst.BIM))
+			c.PC = c.PC + uint32(int16(inst.BIM<<4)>>4)
 		} else {
 			c.PC += 4
 		}
 	case "bge":
 		if int32(c.Registers[inst.RS1]) >= int32(c.Registers[inst.RS2]) {
-			c.PC = c.PC + uint32(int32(inst.BIM))
+			c.PC = c.PC + uint32(int16(inst.BIM<<4)>>4)
 		} else {
 			c.PC += 4
 		}

@@ -1,14 +1,13 @@
 ## KUTEmu
 
-A Toy RiscV 32bit emulator
-
-## Compiling OpenSBI
-```shell
-cd ~/Projects/RiscV/SBI/opensbi
-export PLATFORM_RISCV_ISA=rv32ima
-export PLATFORM_RISCV_XLEN=32
-make LLVM=1 PLATFORM=generic
-```
+WIP: Trying to build a toy RiscV 32bit emulator for running Doom
 
 ## TODO:
-Combine all CSR registers which are shared.
+* Remove OpenSBI and make a simple bootloader
+* Combine all CSR registers which are shared.
+* Fix ecall instruction
+* Implement UART
+* Implement PLIC / CLIC
+* Implement interrupt handling
+* Implement VGA driver
+* Implement WFI

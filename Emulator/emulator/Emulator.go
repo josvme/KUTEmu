@@ -10,24 +10,38 @@ type Emulator struct {
 	cpu instructions.Cpu
 }
 
-const VIRT_DRAM = 0x00000000
+const VIRT_DRAM = 0x80000000
 const VIRT_OPENSBI_START = 0x80200000
 const VIRT_VIRTIO = 0x10001000
+const DTB = 0x87e00000
 
 func (e *Emulator) Run() {
 	memory := instructions.Memory{Map: make(map[uint32]byte)}
 	cpu := instructions.Cpu{
-		PC:          0x00000000,
+		PC:          0x80000000,
 		Registers:   [32]uint32{},
 		Memory:      memory,
 		CurrentMode: 3,
 	}
+	f, _ := os.Create("e.log")
+	defer f.Close()
+	cpu.Memory.Map[0x1028] = 0x4f
+	cpu.Memory.Map[0x1029] = 0x53
+	cpu.Memory.Map[0x102A] = 0x42
+	cpu.Memory.Map[0x102B] = 0x49
+	cpu.Memory.Map[0x102C] = 0x02
+	cpu.Registers[12] = 0x1028
+	cpu.Registers[11] = DTB
 	//path := os.Getenv("OBJ_PATH")
 	//body, _ := os.ReadFile(path)
-	// body, _ := os.ReadFile("./../C/risc-v-c/result/bin/hello.img")
-	path := os.Getenv("OBJ_PATH")
-	body, _ := os.ReadFile(path)
+
+	body, _ := os.ReadFile("./../C/OS/fw_dynamic.bin")
+	//path := os.Getenv("OBJ_PATH")
+	//body, _ := os.ReadFile(path)
 	_ = memory.LoadBytes(body, VIRT_DRAM)
+
+	body, _ = os.ReadFile("two.dtb")
+	_ = memory.LoadBytes(body, DTB)
 
 	var b [4]byte
 	for {
@@ -44,10 +58,11 @@ func (e *Emulator) Run() {
 		}
 		inst := instructions.DecodeBytes(b)
 
-		//fmt.Println(fmt.Sprintf("Executing Bytes: %x, Opcode: %s, Operation: #%v PC: %x ", instructions.TransformLittleToBig(b), inst.Operation(), inst, cpu.PC))
+		fmt.Println(fmt.Sprintf("Executing Bytes: %x, Opcode: %s, Operation: #%v PC: %x ", instructions.TransformLittleToBig(b), inst.Operation(), inst, cpu.PC))
 
+		f.WriteString(fmt.Sprintf("0x%x\n", cpu.PC))
 		_ = cpu.ExecInst(inst)
-		_ = cpu.HandleInterrupts()
+		//_ = cpu.HandleInterrupts(inst.Operation())
 		// Handle interrupts / exceptions
 
 	}
