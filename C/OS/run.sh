@@ -12,6 +12,8 @@ $CC $CFLAGS -Wl,-Tkernel.ld -Wl,-Map=kernel.map -o kernel.elf kernel.c common.c 
 
 # Run it inside nix develop .#riscv
 # $OBJCOPY -O binary kernel.elf kernel.img
+# This doesn't work as qemu can only use a .elf file as -kernel argument
+# So we assume if .elf works for qemu .img should work for our emulator
 
 # Start qemu
 $QEMU -machine virt -bios default -nographic -serial mon:stdio --no-reboot -kernel kernel.elf

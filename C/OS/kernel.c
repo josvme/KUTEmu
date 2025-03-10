@@ -38,9 +38,10 @@ void *memset(void *buf, char c, size_t n)
 
 void kernel_main(void)
 {
-
-    printf("\n\nHello %s\n", "World!");
-    printf("1 + 2 = %d, %x\n", 1 + 2, 0x1234abcd);
+    // This works
+    putchar('X');
+    //printf("\n\nHello %s\n", "World!");
+    //printf("1 + 2 = %d, %x\n", 1 + 2, 0x1234abcd);
 
     for (;;) {
         __asm__ __volatile__("wfi");
