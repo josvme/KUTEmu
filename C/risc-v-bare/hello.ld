@@ -1,5 +1,5 @@
 MEMORY {
-  dram_space (rwx) : ORIGIN = 0x80000000, LENGTH = 128
+  dram_space (rwx) : ORIGIN = 0x82000000, LENGTH = 128
 }
 
 SECTIONS {

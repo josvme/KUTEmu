@@ -7,4 +7,4 @@ hello.o: hello.s
 	${AS} -march=rv32i -mabi=ilp32 -o hello.o -c hello.s
 
 qemu:
-	qemu-system-riscv32 -machine virt -bios ../Image -S -s -nographic
+	qemu-system-riscv32 -machine virt -bios ../OS/fw_dynamic.bin -kernel hellomake -nographic

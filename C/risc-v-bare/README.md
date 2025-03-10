@@ -8,3 +8,9 @@ Note: We convert this into flatfile format before loading to Qemu. See [README](
 
 ## Resources
 https://popovicu.com/posts/bare-metal-programming-risc-v/
+
+Run with compiled OpenSBI and qemu.
+```shell
+make hello
+make qemu
+```
