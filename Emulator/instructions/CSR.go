@@ -51,7 +51,7 @@ const MSTATUS = 0x300
 const MISA = 0x301
 const MEDELEG = 0x302
 const MIDELEG = 0x303
-const MIE = 0x404
+const MIE = 0x304
 const MTVEC = 0x305
 const MCOUNTEREN = 0x306
 
@@ -235,7 +235,7 @@ func (csr *CSR) SetValue(csrReg uint32, value uint32, currentExecutionMode uint3
 	}
 	// First check if privilege is high enough to perform operation
 	rwmode := getRWMode(csrReg, currentExecutionMode)
-	if rwmode >= 3 {
+	if rwmode > currentExecutionMode {
 		// Attempts to access a non-existent CSR raise an illegal instruction exception. Attempts to access a
 		//CSR without appropriate privilege level or to write a read-only register also raise illegal instruction
 		//exceptions. A read/write register might also contain some bits that are read-only, in which case

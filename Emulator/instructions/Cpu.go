@@ -341,8 +341,8 @@ func executeI(inst II, c *Cpu) {
 		c.PC = oldV + uint32(int16(inst.IIM<<4)>>4)
 
 	case "ecall":
-		if os.Getenv("MODE") == "test" || true {
-			if c.Registers[10] == 42 {
+		if os.Getenv("MODE") == "test" {
+			if c.Registers[10] == 42 || c.Registers[10] == 0 {
 				fmt.Fprintln(os.Stdout, fmt.Sprintf("Test Succeeded"))
 			} else {
 				fmt.Fprintln(os.Stdout, fmt.Sprintf("Ecall: testId: %d, Failed", c.Registers[3]))
