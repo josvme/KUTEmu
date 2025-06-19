@@ -1,6 +1,8 @@
 package instructions
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type Inst interface {
 	Decode(inst uint32) Inst
