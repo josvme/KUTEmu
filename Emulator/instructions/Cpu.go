@@ -496,13 +496,13 @@ func executeB(inst BI, c *Cpu) {
 		}
 	case "bltu":
 		if c.Registers[inst.RS1] < c.Registers[inst.RS2] {
-			c.PC = c.PC + uint32(inst.BIM)
+			c.PC = c.PC + uint32(int16(inst.BIM<<4)>>4)
 		} else {
 			c.PC += 4
 		}
 	case "bgeu":
 		if c.Registers[inst.RS1] >= c.Registers[inst.RS2] {
-			c.PC = c.PC + uint32(inst.BIM)
+			c.PC = c.PC + uint32(int16(inst.BIM<<4)>>4)
 		} else {
 			c.PC += 4
 		}
