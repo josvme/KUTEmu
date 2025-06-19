@@ -55,6 +55,5 @@ func (e *Emulator) Run() {
 		_ = cpu.ExecInst(inst)
 		//_ = cpu.HandleInterrupts(inst.Operation())
 		// Handle interrupts / exceptions
-
 	}
 }
