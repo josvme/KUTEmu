@@ -341,7 +341,7 @@ func executeI(inst II, c *Cpu) {
 		c.PC = oldV + uint32(int16(inst.IIM<<4)>>4)
 
 	case "ecall":
-		if os.Getenv("MODE") == "test" {
+		if os.Getenv("MODE") == "test" || true {
 			if c.Registers[10] == 42 || c.Registers[10] == 0 {
 				fmt.Fprintln(os.Stdout, fmt.Sprintf("Test Succeeded"))
 			} else {
@@ -358,8 +358,9 @@ func executeI(inst II, c *Cpu) {
 
 	case "csrrw":
 		// Ignore reading values / registers twice
+		xs := c.Registers[inst.RS1]
 		c.Registers[inst.RD] = c.CSR.GetValue(uint32(inst.IIM), c.CurrentMode, c)
-		c.CSR.SetValue(uint32(inst.IIM), c.Registers[inst.RS1], c.CurrentMode, c)
+		c.CSR.SetValue(uint32(inst.IIM), xs, c.CurrentMode, c)
 		c.PC += 4
 
 	// For all i or immediate instructions for csr RD is a 5 bit field
@@ -371,38 +372,42 @@ func executeI(inst II, c *Cpu) {
 	case "csrrs":
 		// We need more checks here to see if we can indeed modify the registers based on privilege level
 		// at which processor is working
-		c.Registers[inst.RD] = c.CSR.GetValue(uint32(inst.IIM), c.CurrentMode, c)
+		kk := c.CSR.GetValue(uint32(inst.IIM), c.CurrentMode, c)
 		csrExisting := c.CSR.GetValue(uint32(inst.IIM), c.CurrentMode, c)
 		csrBitmask := c.Registers[inst.RS1]
 		c.CSR.SetValue(uint32(inst.IIM), csrBitmask|csrExisting, c.CurrentMode, c)
+		c.Registers[inst.RD] = kk
 		c.PC += 4
 
 	case "csrrsi":
 		// We need more checks here to see if we can indeed modify the registers based on privilege level
 		// at which processor is working
-		c.Registers[inst.RD] = c.CSR.GetValue(uint32(inst.IIM), c.CurrentMode, c)
+		kk := c.CSR.GetValue(uint32(inst.IIM), c.CurrentMode, c)
 		// RS1 has the immediate values
 		csrExisting := c.CSR.GetValue(uint32(inst.IIM), c.CurrentMode, c)
 		csrBitmask := uint32(inst.RS1)
 		c.CSR.SetValue(uint32(inst.IIM), csrBitmask|csrExisting, c.CurrentMode, c)
+		c.Registers[inst.RD] = kk
 		c.PC += 4
 
 	case "csrrc":
 		// We need more checks here to see if we can indeed modify the registers based on privilege level
 		// at which processor is working
-		c.Registers[inst.RD] = c.CSR.GetValue(uint32(inst.IIM), c.CurrentMode, c)
+		kk := c.CSR.GetValue(uint32(inst.IIM), c.CurrentMode, c)
 		csrExisting := c.CSR.GetValue(uint32(inst.IIM), c.CurrentMode, c)
 		csrBitmask := c.Registers[inst.RS1]
 		c.CSR.SetValue(uint32(inst.IIM), csrExisting & ^csrBitmask, c.CurrentMode, c)
+		c.Registers[inst.RD] = kk
 		c.PC += 4
 
 	case "csrrci":
 		// We need more checks here to see if we can indeed modify the registers based on privilege level
 		// at which processor is working
-		c.Registers[inst.RD] = c.CSR.GetValue(uint32(inst.IIM), c.CurrentMode, c)
+		kk := c.CSR.GetValue(uint32(inst.IIM), c.CurrentMode, c)
 		csrExisting := c.CSR.GetValue(uint32(inst.IIM), c.CurrentMode, c)
 		csrBitmask := uint32(inst.RS1)
 		c.CSR.SetValue(uint32(inst.IIM), csrExisting & ^csrBitmask, c.CurrentMode, c)
+		c.Registers[inst.RD] = kk
 		c.PC += 4
 	case "sret":
 		statusReg := ToMStatusReg(c.CSR.GetValue(SSTATUS, c.CurrentMode, c))

@@ -192,7 +192,7 @@ func (csr *CSR) GetValue(csrReg uint32, currentExecutionMode uint32, cpu *Cpu) u
 		csr.handleIllegalGet(csrReg, currentExecutionMode, uint32(3), cpu)
 	}
 	perm := getRWMode(csrReg, currentExecutionMode)
-	if perm > 3 {
+	if perm > currentExecutionMode {
 		// illegal access
 		csr.handleIllegalGet(csrReg, currentExecutionMode, uint32(3), cpu)
 	}
