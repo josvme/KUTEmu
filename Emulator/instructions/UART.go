@@ -2,6 +2,7 @@ package instructions
 
 import (
 	"fmt"
+	"golang.org/x/sys/unix"
 	"os"
 )
 
@@ -46,7 +47,7 @@ func (u *UART) Write(b byte, location uint32) error {
 		fmt.Printf("%c", b)
 		// show you can write more data
 		// we write to the register, so the register can be completely used by read buffer
-		u.registerRT[5] = 32
+		u.registerRT[5] = u.registerRT[5] | 1<<5
 		return nil
 	}
 
@@ -63,34 +64,28 @@ func (u *UART) Write(b byte, location uint32) error {
 
 // TODO
 func (u *UART) Read(location uint32) (byte, error) {
-	if location == LSR {
-		// check stdin if there is some bytes to read, if there is nothing to read simply return nil
-		// Check if there's data available to read from stdin
-		stat, err := os.Stdin.Stat()
-		if err != nil {
-			return u.registerRT[LSR], err
-		}
+	if location == LSR && u.registerRT[LSR]&0x1 == 0 {
+		// read only if there is no data in receive buffer
+		unix.SetNonblock(int(os.Stdin.Fd()), true)
+		defer unix.SetNonblock(int(os.Stdin.Fd()), false)
 
-		// Check if there's data in the stdin buffer
-		if (stat.Mode()&os.ModeCharDevice) == 0 && stat.Size() > 0 {
-			// Data is available to read
-			// Set bit 0 (DR - Data Ready) to 1
+		// Create a buffer to read into
+		buf := make([]byte, 1)
+		// Try to read one byte
+		_, err := os.Stdin.Read(buf)
+		if err == nil {
+			u.registerRT[RBR] = buf[0]
 			u.registerRT[LSR] |= 0x1
 		}
-
 		return u.registerRT[LSR], nil
 	}
 
 	if location == RBR && u.getDLabFlag() == 0 {
-		b := make([]byte, 1)
-		_, err := os.Stdin.Read(b)
-		if err != nil {
-			return 0, err
-		}
-		u.registerRT[RBR] = b[0]
 		// unsets data is there bit
-		u.registerRT[5] = u.registerRT[5] & 0xFE
-		return b[0], nil
+		if u.registerRT[LSR]&0x1 == 0x1 {
+			u.registerRT[LSR] = u.registerRT[LSR] & 0xFE
+		}
+		return u.registerRT[RBR], nil
 	}
 
 	if u.getDLabFlag() == 1 && location <= 2 {
