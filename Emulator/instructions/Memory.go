@@ -16,7 +16,7 @@ func (m *Memory) LoadBytes(b []byte, location uint32) error {
 
 func (m *Memory) WriteByte(b byte, location uint32) {
 	if location >= VIRT_UART0 && location <= VIRT_UART0+0x100 {
-		_ = m.Uart.Write(b)
+		_ = m.Uart.Write(b, location-VIRT_UART0)
 		return
 	}
 	m.Map[location] = b
@@ -35,6 +35,10 @@ func (m *Memory) WriteWord(w uint32, location uint32) {
 }
 
 func (m *Memory) ReadByte(location uint32) byte {
+	if location >= VIRT_UART0 && location <= VIRT_UART0+0x100 {
+		b, _ := m.Uart.Read(location - VIRT_UART0)
+		return b
+	}
 	return m.Map[location]
 }
 

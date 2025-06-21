@@ -16,7 +16,7 @@ const VIRT_VIRTIO = 0x10001000
 const DTB = 0x87e00000
 
 func (e *Emulator) Run() {
-	memory := instructions.Memory{Map: make(map[uint32]byte)}
+	memory := instructions.Memory{Map: make(map[uint32]byte), Uart: instructions.NewUART()}
 	cpu := instructions.Cpu{
 		PC:          0x80000000,
 		Registers:   [32]uint32{},
@@ -29,7 +29,7 @@ func (e *Emulator) Run() {
 	//body, _ := os.ReadFile("./../C/OS/fw_dynamic.bin")
 	path := os.Getenv("OBJ_PATH")
 	body, _ := os.ReadFile(path)
-	//body, _ = os.ReadFile("../Tests/os.img")
+	body, _ = os.ReadFile("../Tests/os.img")
 	_ = memory.LoadBytes(body, VIRT_DRAM)
 
 	//body, _ = os.ReadFile("two.dtb")
