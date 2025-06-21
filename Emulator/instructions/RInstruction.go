@@ -42,11 +42,23 @@ func (i RI) Operation() string {
 			return "slt"
 		case i.F3 == 0x3 && i.F7 == 0x00:
 			return "sltu"
-		// Add atomic instructions
-		case i.F3 == 0x2 && F5 == 0x02:
-			return "lr.w"
-		case i.F3 == 0x2 && F5 == 0x03:
-			return "sc.w"
+		// Add multiply instructions
+		case i.F3 == 0x0 && i.F7 == 0x01:
+			return "mul"
+		case i.F3 == 0x1 && i.F7 == 0x01:
+			return "mulh"
+		case i.F3 == 0x2 && i.F7 == 0x01:
+			return "mulhsu"
+		case i.F3 == 0x3 && i.F7 == 0x01:
+			return "mulhu"
+		case i.F3 == 0x4 && i.F7 == 0x01:
+			return "div"
+		case i.F3 == 0x5 && i.F7 == 0x01:
+			return "divu"
+		case i.F3 == 0x6 && i.F7 == 0x01:
+			return "rem"
+		case i.F3 == 0x7 && i.F7 == 0x01:
+			return "remu"
 
 		default:
 			panic("Unknown R Operation")
@@ -73,23 +85,12 @@ func (i RI) Operation() string {
 			return "amomaxu.w"
 		case i.F3 == 0x2 && F5 == 0x18:
 			return "amominu.w"
-		// Add multiply instructions
-		case i.F3 == 0x0 && i.F7 == 0x01:
-			return "mul"
-		case i.F3 == 0x1 && i.F7 == 0x01:
-			return "mulh"
-		case i.F3 == 0x2 && i.F7 == 0x01:
-			return "mulhsu"
-		case i.F3 == 0x3 && i.F7 == 0x01:
-			return "mulhu"
-		case i.F3 == 0x4 && i.F7 == 0x01:
-			return "div"
-		case i.F3 == 0x5 && i.F7 == 0x01:
-			return "divu"
-		case i.F3 == 0x6 && i.F7 == 0x01:
-			return "rem"
-		case i.F3 == 0x7 && i.F7 == 0x01:
-			return "remu"
+		// Add atomic instructions
+		case i.F3 == 0x2 && F5 == 0x02:
+			return "lr.w"
+		case i.F3 == 0x2 && F5 == 0x03:
+			return "sc.w"
+
 		default:
 			panic("Unknown A Operation")
 		}
