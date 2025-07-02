@@ -10,3 +10,7 @@ WIP: Trying to build a toy RiscV 32bit emulator for running Doom
 * Implement interrupt handling
 * Implement VGA driver
 * Implement WFI
+
+## Others
+Based on current execution privilege level, always adjust mstatus register. For example, all lower priv mode interrupts 
+should be disabled and all higher mode interrupts enabled.

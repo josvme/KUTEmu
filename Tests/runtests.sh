@@ -14,5 +14,5 @@ do
   export MODE="test"
   echo "Running: $name"
   timeout 2 ./riscv
-  #rm $name.img
+  rm $name.img
 done

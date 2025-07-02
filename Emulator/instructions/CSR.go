@@ -32,6 +32,9 @@ const SIE = 0x104
 const STVEC = 0x105
 const SCOUNTEREN = 0x106
 
+// Supervisor configuration
+const SENVCFG = 0x10A
+
 // Supervisor Trap Handling
 const SSCRATCH = 0x140
 const SEPC = 0x141
@@ -46,6 +49,9 @@ const MARCHID = 0xF12
 const MIMPID = 0xF13
 const MHARTID = 0xF14
 
+// Can be hardwired to 0
+const MCONFPTR = 0xF15
+
 // Machine Trap Setup
 const MSTATUS = 0x300
 const MISA = 0x301
@@ -54,6 +60,7 @@ const MIDELEG = 0x303
 const MIE = 0x304
 const MTVEC = 0x305
 const MCOUNTEREN = 0x306
+const MSTATUSH = 0x310
 
 // Machine Trap Handling
 const MSCRATCH = 0x340
@@ -61,14 +68,23 @@ const MEPC = 0x341
 const MCAUSE = 0x342
 const MTVAL = 0x343
 const MIP = 0x344
+const MTINST = 0x34A
+const MTVAL2 = 0x34B
+
+// Machine configuration
+// Can skip for now
+const MENVCFG = 0x30A
+const MENVCFGH = 0x31A
+const MSECCFG = 0x747
+const MSECCFGH = 0x757
 
 // Machine Counters / Timers
 const MCYCLE = 0xB00
 const MINSTRET = 0xB02
 const MCYCLEH = 0xCB80
 
-// More
-const MSTATUSH = 0x310
+// machine memory protection
+// TODO
 
 type CSR struct {
 	Registers [4096]uint32
@@ -198,7 +214,8 @@ func (csr *CSR) GetValue(csrReg uint32, currentExecutionMode uint32, cpu *Cpu) u
 	}
 	switch {
 	case csrReg == MISA:
-		return (1 << 30) | 1 | (1 << 8) | (0 << 18) // 18 is supervisor mode
+		// See https://five-embeddev.com/riscv-priv-isa-manual/Priv-v1.12/machine.html#machine
+		return (1 << 30) | 1 | (1 << 8) | (1 << 12) | (1 << 18) | (1 << 20) // 18 is supervisor mode, 20 is user
 	case csrReg == MVENDORID:
 		return 0
 	case csrReg == MARCHID:
@@ -208,6 +225,7 @@ func (csr *CSR) GetValue(csrReg uint32, currentExecutionMode uint32, cpu *Cpu) u
 	case csrReg == MHARTID:
 		return 0 // Single core system
 	}
+	// TODO see if we can use masked registers here. WARL (Write any values, reads legal values)
 	return csr.Registers[csrReg]
 }
 
@@ -235,14 +253,21 @@ func (csr *CSR) SetValue(csrReg uint32, value uint32, currentExecutionMode uint3
 	}
 	// First check if privilege is high enough to perform operation
 	rwmode := getRWMode(csrReg, currentExecutionMode)
-	if rwmode > currentExecutionMode {
+	mode := getDetailsForCSR(csrReg).mode
+	// mode 3 is read only, we can't write in to it
+	if rwmode > currentExecutionMode || mode >= 3 {
 		// Attempts to access a non-existent CSR raise an illegal instruction exception. Attempts to access a
 		//CSR without appropriate privilege level or to write a read-only register also raise illegal instruction
-		//exceptions. A read/write register might also contain some bits that are read-only, in which case
-		//writes to the read-only bits are ignored.
+		//exceptions.
+		//A read/write register might also contain some bits that are read-only, in which case
+		//writes to the read-only bits are ignored. This means we should mask values first before writing
+		// TODO
 		csr.handleExceptions(currentExecutionMode, uint32(3), cpu)
 		return
 	}
+	// we should also check if reg is write
+	// We should also update correspnding M/S/U registers after masking
+	// TODO
 	csr.Registers[csrReg] = value
 }
 
@@ -387,8 +412,10 @@ type MStatusReg struct {
 	mie  uint32
 	upie uint32
 	spie uint32
+	ube  uint32
 	mpie uint32
 	spp  uint32
+	vs   uint32
 	mpp  uint32
 	fs   uint32
 	xs   uint32
@@ -420,8 +447,10 @@ func ToMStatusReg(r uint32) MStatusReg {
 	mie := getBitsAsUInt32(r, 3, 3)
 	upie := getBitsAsUInt32(r, 4, 4)
 	spie := getBitsAsUInt32(r, 5, 5)
+	ube := getBitsAsUInt32(r, 6, 6)
 	mpie := getBitsAsUInt32(r, 7, 7)
 	spp := getBitsAsUInt32(r, 8, 8)
+	vs := getBitsAsUInt32(r, 9, 10)
 	mpp := getBitsAsUInt32(r, 11, 12)
 	fs := getBitsAsUInt32(r, 13, 14)
 	xs := getBitsAsUInt32(r, 15, 16)
@@ -439,8 +468,10 @@ func ToMStatusReg(r uint32) MStatusReg {
 		mie:  mie,
 		upie: upie,
 		spie: spie,
+		ube:  ube,
 		mpie: mpie,
 		spp:  spp,
+		vs:   vs,
 		mpp:  mpp,
 		fs:   fs,
 		xs:   xs,
@@ -460,8 +491,10 @@ func FromMStatusReg(r MStatusReg) uint32 {
 		r.mie<<3 |
 		r.upie<<4 |
 		r.spie<<5 |
+		r.ube<<6 |
 		r.mpie<<7 |
 		r.spp<<8 |
+		r.vs<<9 |
 		r.mpp<<11 |
 		r.fs<<13 |
 		r.xs<<15 |

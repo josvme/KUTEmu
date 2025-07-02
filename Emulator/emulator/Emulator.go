@@ -29,7 +29,6 @@ func (e *Emulator) Run() {
 	//body, _ := os.ReadFile("./../C/OS/fw_dynamic.bin")
 	path := os.Getenv("OBJ_PATH")
 	body, _ := os.ReadFile(path)
-	body, _ = os.ReadFile("../Tests/os.img")
 	_ = memory.LoadBytes(body, VIRT_DRAM)
 
 	//body, _ = os.ReadFile("two.dtb")
