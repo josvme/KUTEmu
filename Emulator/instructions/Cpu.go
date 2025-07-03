@@ -434,6 +434,9 @@ func executeI(inst II, c *Cpu) {
 		c.CSR.Registers[MSTATUS] = FromMStatusReg(statusReg)
 		// change return PC
 		c.PC = c.CSR.Registers[MEPC]
+	case "sfence.vma":
+		// nop operation
+		c.PC += 4
 	case "wfi":
 		// Wait until interrupt comes
 		mip := c.CSR.Registers[MIP]

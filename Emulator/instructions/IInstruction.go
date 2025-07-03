@@ -73,6 +73,8 @@ func (i II) Operation() string {
 		return "mret"
 	case i.F3 == 0x0 && i.Opcode == OP_TOPLEVEL_ENVIRON && i.IIM == 0b000100000101:
 		return "wfi"
+	case i.F3 == 0x0 && i.Opcode == OP_TOPLEVEL_ENVIRON && i.IIM&0xF70 == 0b000100100000:
+		return "sfence.vma"
 	default:
 		panic("Unknown Operation")
 	}
