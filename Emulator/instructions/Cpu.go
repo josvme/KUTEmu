@@ -8,8 +8,8 @@ import (
 type Cpu struct {
 	PC             uint32
 	Registers      [32]uint32
-	Memory         Memory
-	CSR            CSR
+	Memory         *Memory
+	CSR            *CSR
 	AtomicReserved bool
 	// 3 for machine, 1 for supervisor, 2 for hypervisor, 0 for user
 	CurrentMode uint32
@@ -45,20 +45,25 @@ func (c *Cpu) ExecInst(i Inst) error {
 }
 
 func (cpu *Cpu) HandleInterrupts(inst string) error {
-	if inst == "wfi" && cpu.CSR.Registers[MIP] != 1 {
-		cpu.CSR.Registers[MIP] = 1
-
-		csr := cpu.CSR
-		mode := cpu.CurrentMode
-		// set mcause & scause register
-		switch mode {
-		case 1:
-			csr.Registers[SCAUSE] = csr.Registers[SCAUSE] | 1<<31 | 1 // supervisor software interrupt
-		default:
-			csr.Registers[MCAUSE] = csr.Registers[MCAUSE] | 1<<31 | 3 // machine software interrupt
-		}
-		return nil
-	}
+	//if inst == "wfi" && cpu.CSR.Registers[MIP] == 0 {
+	//	for {
+	//		if cpu.Memory.Uart.DataExistsToRead() && cpu.CSR.Registers[MIP] > 0 {
+	//			// trigger a plic interrupt
+	//			cpu.Memory.Plic.TriggerInterrupt(10, cpu)
+	//			break
+	//		}
+	//	}
+	// }
+	//csr := cpu.CSR
+	//mode := cpu.CurrentMode
+	//// set mcause & scause register
+	//switch mode {
+	//case 1:
+	//	csr.Registers[SCAUSE] = csr.Registers[SCAUSE] | 1<<31 | 1 // supervisor software interrupt
+	//default:
+	//	csr.Registers[MCAUSE] = csr.Registers[MCAUSE] | 1<<31 | 3 // machine software interrupt
+	//}
+	//return nil
 	// Implement only direct mode now
 
 	// Handle interrupts
@@ -68,7 +73,11 @@ func (cpu *Cpu) HandleInterrupts(inst string) error {
 	// A trap in privilege level P causes a jump to the address mtvec + P ×0x40. Non-maskable interrupts
 	//cause a jump to address mtvec + 0xFC.
 
-	if cpu.CSR.Registers[MIP] == 1 {
+	if cpu.CSR.Registers[MIE] == 0 {
+		return nil
+	}
+	status := ToMStatusReg(cpu.CSR.GetValue(MSTATUS, cpu.CurrentMode, cpu))
+	if status.mie > 0 && cpu.CSR.Registers[MIP] > 0 {
 		csr := cpu.CSR
 		mode := cpu.CurrentMode
 
@@ -78,7 +87,7 @@ func (cpu *Cpu) HandleInterrupts(inst string) error {
 		if midelegReg&uint32(1<<3) == 1 {
 			// go to supervisor trap
 			csr.Registers[SEPC] = cpu.PC
-			sstatus := ToMStatusReg(SSTATUS)
+			sstatus := ToMStatusReg(cpu.CSR.GetValue(SSTATUS, cpu.CurrentMode, cpu))
 			sstatus.spp = mode
 			csr.Registers[SSTATUS] = FromMStatusReg(sstatus)
 			// This is very crappy, to accomodate +4
@@ -91,16 +100,33 @@ func (cpu *Cpu) HandleInterrupts(inst string) error {
 		} else {
 			// run machine trap
 			csr.Registers[MEPC] = cpu.PC
-			mstatus := ToMStatusReg(MSTATUS)
+			mstatus := ToMStatusReg(cpu.CSR.GetValue(MSTATUS, cpu.CurrentMode, cpu))
 			mstatus.mpp = mode
+			mstatus.mpie = mstatus.mie
+			mstatus.mie = 0
+			// mip bit i is same as bit i in mcause
+			// See https://five-embeddev.com/riscv-priv-isa-manual/Priv-v1.12/machine.html#machine-interrupt-registers-mip-and-mie
+
+			// See how mcause is set
+			// https://five-embeddev.com/riscv-priv-isa-manual/Priv-v1.12/machine.html#sec:mcause
+			// When a trap is taken into M-mode,  mcause is written with a code indicating the event that caused the trap.
+			// Otherwise, mcause is never written by the implementation, though it may be explicitly written by software.
+			// The Interrupt bit in the mcause register is set if the trap was caused by an interrupt.
+
+			// This is a machine external interrupt, we set mcause to interrupt
+			// TODO checks for other interrupts too
+			if csr.Registers[MIP]&(1<<11) > 0 {
+				csr.Registers[MCAUSE] = 1<<31 | uint32(11)
+			}
+
 			csr.Registers[MSTATUS] = FromMStatusReg(mstatus)
 			// This is very crappy, to accomodate +4
 			mtvec := ToMtvecReg(csr.Registers[MTVEC])
 			cpu.PC = mtvec.base
 			cpu.CurrentMode = 3
 			// only for interrupts, software
-			cpu.PC = (mtvec.base + 4*3) - 4
-			cpu.CSR.Registers[MIP] = 0
+			//cpu.PC = (mtvec.base + 4*3) - 4
+			//cpu.CSR.Registers[MIP] = 0
 		}
 
 	}
@@ -313,10 +339,7 @@ func executeI(inst II, c *Cpu) {
 	// All Load ones are signed offsets
 	case "lw":
 		rdi := int32(c.Registers[inst.RS1]) + int32(int16(inst.IIM<<4)>>4)
-		c.Registers[inst.RD] = uint32(int32(uint32(c.Memory.ReadByte(uint32(rdi))) |
-			(uint32(c.Memory.ReadByte(uint32(rdi+1))) << 8) |
-			(uint32(c.Memory.ReadByte(uint32(rdi+2))) << 16) |
-			(uint32(c.Memory.ReadByte(uint32(rdi+3))) << 24)))
+		c.Registers[inst.RD] = c.Memory.ReadWord(uint32(rdi))
 		c.PC += 4
 
 	// All Load ones are signed offsets
@@ -422,6 +445,7 @@ func executeI(inst II, c *Cpu) {
 		c.PC = c.CSR.Registers[SEPC]
 	case "mret":
 		statusReg := ToMStatusReg(c.CSR.GetValue(MSTATUS, c.CurrentMode, c))
+		statusRegTmp := statusReg
 		statusReg.mie = statusReg.mpie
 		// restore mode of processor
 		c.CurrentMode = statusReg.mpp
@@ -431,7 +455,11 @@ func executeI(inst II, c *Cpu) {
 		}
 		// Set to U-Mode
 		statusReg.mpp = 0
-		c.CSR.Registers[MSTATUS] = FromMStatusReg(statusReg)
+		tmp := FromMStatusReg(statusReg)
+		// Adding this print here, fixes the issue. Probably a bug somewhere in golang / intellij
+		(fmt.Sprintf("before tmp %x, mstatus %x, from csr:%x from mstatus: %x", FromMStatusReg(statusRegTmp), c.CSR.Registers[MSTATUS], c.CSR.GetValue(MSTATUS, c.CurrentMode, c), tmp))
+		c.CSR.Registers[MSTATUS] = tmp
+		(fmt.Sprintf("after tmp %x, mstatus %x, from csr:%x from mstatus: %x", FromMStatusReg(statusRegTmp), c.CSR.Registers[MSTATUS], c.CSR.GetValue(MSTATUS, c.CurrentMode, c), tmp))
 		// change return PC
 		c.PC = c.CSR.Registers[MEPC]
 	case "sfence.vma":
@@ -439,9 +467,14 @@ func executeI(inst II, c *Cpu) {
 		c.PC += 4
 	case "wfi":
 		// Wait until interrupt comes
-		mip := c.CSR.Registers[MIP]
-		if mip > 0 {
-			c.PC += 4
+		// Check for interrupts from PLIC in a loop here
+		for {
+			if c.Memory.Uart.DataExistsToRead() && c.CSR.Registers[MIE] > 0 {
+				// trigger a plic interrupt
+				c.Memory.Plic.TriggerInterrupt(10, c)
+				c.PC += 4
+				break
+			}
 		}
 		// If nothing then simply wait
 	default:
@@ -463,10 +496,8 @@ func executeS(inst SI, c *Cpu) {
 		c.PC += 4
 
 	case "sw":
-		c.Memory.WriteByte(byte(c.Registers[int(inst.RS2)]&uint32(0xFF)), c.Registers[int(inst.RS1)]+uint32(int16(inst.SIM<<4)>>4))
-		c.Memory.WriteByte(byte((c.Registers[int(inst.RS2)]&uint32(0xFF00))>>8), c.Registers[int(inst.RS1)]+uint32(int16(inst.SIM<<4)>>4)+1)
-		c.Memory.WriteByte(byte((c.Registers[int(inst.RS2)]&uint32(0xFF0000))>>16), c.Registers[int(inst.RS1)]+uint32(int16(inst.SIM<<4)>>4)+2)
-		c.Memory.WriteByte(byte((c.Registers[int(inst.RS2)]&uint32(0xFF000000))>>24), c.Registers[int(inst.RS1)]+uint32(int16(inst.SIM<<4)>>4)+3)
+		location := c.Registers[int(inst.RS1)] + uint32(int16(inst.SIM<<4)>>4)
+		c.Memory.WriteWord(c.Registers[int(inst.RS2)], location)
 		c.PC += 4
 	}
 }

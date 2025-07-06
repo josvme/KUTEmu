@@ -6,88 +6,88 @@ import (
 )
 
 // User Trap Setup
-const USTATUS = 0x000
-const UIE = 0x004
-const UTVEC = 0x005
+const USTATUS uint32 = 0x000
+const UIE uint32 = 0x004
+const UTVEC uint32 = 0x005
 
 // User Trap Handling
-const USCRATCH = 0x040
-const UEPC = 0x041
-const UCAUSE = 0x042
-const UTVAL = 0x043
-const UIP = 0x044
+const USCRATCH uint32 = 0x040
+const UEPC uint32 = 0x041
+const UCAUSE uint32 = 0x042
+const UTVAL uint32 = 0x043
+const UIP uint32 = 0x044
 
 // User Counters / Timers
-const CYCLE = 0xC00
-const TIME = 0xC01
-const INSTRET = 0xC02
-const CYCLEH = 0xC80
-const TIMEH = 0xC81
+const CYCLE uint32 = 0xC00
+const TIME uint32 = 0xC01
+const INSTRET uint32 = 0xC02
+const CYCLEH uint32 = 0xC80
+const TIMEH uint32 = 0xC81
 
 // Supervisor Trap Setup
-const SSTATUS = 0x100
-const SEDELEG = 0x102
-const SIDELEG = 0x103
-const SIE = 0x104
-const STVEC = 0x105
-const SCOUNTEREN = 0x106
+const SSTATUS uint32 = 0x100
+const SEDELEG uint32 = 0x102
+const SIDELEG uint32 = 0x103
+const SIE uint32 = 0x104
+const STVEC uint32 = 0x105
+const SCOUNTEREN uint32 = 0x106
 
 // Supervisor configuration
-const SENVCFG = 0x10A
+const SENVCFG uint32 = 0x10A
 
 // Supervisor Trap Handling
-const SSCRATCH = 0x140
-const SEPC = 0x141
-const SCAUSE = 0x142
-const STVAL = 0x143
-const SIP = 0x144
-const SRW = 0x180
+const SSCRATCH uint32 = 0x140
+const SEPC uint32 = 0x141
+const SCAUSE uint32 = 0x142
+const STVAL uint32 = 0x143
+const SIP uint32 = 0x144
+const SRW uint32 = 0x180
 
 // Machine Information Registers
-const MVENDORID = 0xF11
-const MARCHID = 0xF12
-const MIMPID = 0xF13
-const MHARTID = 0xF14
+const MVENDORID uint32 = 0xF11
+const MARCHID uint32 = 0xF12
+const MIMPID uint32 = 0xF13
+const MHARTID uint32 = 0xF14
 
 // Can be hardwired to 0
-const MCONFPTR = 0xF15
+const MCONFPTR uint32 = 0xF15
 
 // Machine Trap Setup
-const MSTATUS = 0x300
-const MISA = 0x301
-const MEDELEG = 0x302
-const MIDELEG = 0x303
-const MIE = 0x304
-const MTVEC = 0x305
-const MCOUNTEREN = 0x306
-const MSTATUSH = 0x310
+const MSTATUS uint32 = 0x300
+const MISA uint32 = 0x301
+const MEDELEG uint32 = 0x302
+const MIDELEG uint32 = 0x303
+const MIE uint32 = 0x304
+const MTVEC uint32 = 0x305
+const MCOUNTEREN uint32 = 0x306
+const MSTATUSH uint32 = 0x310
 
 // Machine Trap Handling
-const MSCRATCH = 0x340
-const MEPC = 0x341
-const MCAUSE = 0x342
-const MTVAL = 0x343
-const MIP = 0x344
-const MTINST = 0x34A
-const MTVAL2 = 0x34B
+const MSCRATCH uint32 = 0x340
+const MEPC uint32 = 0x341
+const MCAUSE uint32 = 0x342
+const MTVAL uint32 = 0x343
+const MIP uint32 = 0x344
+const MTINST uint32 = 0x34A
+const MTVAL2 uint32 = 0x34B
 
 // Machine configuration
 // Can skip for now
-const MENVCFG = 0x30A
-const MENVCFGH = 0x31A
-const MSECCFG = 0x747
-const MSECCFGH = 0x757
+const MENVCFG uint32 = 0x30A
+const MENVCFGH uint32 = 0x31A
+const MSECCFG uint32 = 0x747
+const MSECCFGH uint32 = 0x757
 
 // Machine Counters / Timers
-const MCYCLE = 0xB00
-const MINSTRET = 0xB02
-const MCYCLEH = 0xCB80
+const MCYCLE uint32 = 0xB00
+const MINSTRET uint32 = 0xB02
+const MCYCLEH uint32 = 0xCB80
 
 // machine memory protection
 // TODO
 
 type CSR struct {
-	Registers [4096]uint32
+	Registers []uint32
 }
 
 type CSRPerm struct {
@@ -230,8 +230,8 @@ func (csr *CSR) GetValue(csrReg uint32, currentExecutionMode uint32, cpu *Cpu) u
 }
 
 func (csr *CSR) isCSRValid(reg uint32) bool {
-	r := int(reg)
-	v := []int{USTATUS, UIE, UTVEC, USCRATCH, UEPC, UCAUSE, UTVAL, UIP, CYCLE, TIME, INSTRET, CYCLEH, TIMEH,
+	r := reg
+	v := []uint32{USTATUS, UIE, UTVEC, USCRATCH, UEPC, UCAUSE, UTVAL, UIP, CYCLE, TIME, INSTRET, CYCLEH, TIMEH,
 		SSTATUS, SEDELEG, SIDELEG, SIE, STVEC, SCOUNTEREN, SSCRATCH, SEPC, SCAUSE, STVAL, SIP, SRW,
 		MVENDORID, MARCHID, MIMPID, MHARTID, MSTATUS, MISA, MEDELEG, MIDELEG, MIE, MTVEC, MCOUNTEREN,
 		MSCRATCH, MEPC, MCAUSE, MTVAL, MIP, MCYCLE, MINSTRET, MCYCLEH, MSTATUSH}
@@ -255,7 +255,7 @@ func (csr *CSR) SetValue(csrReg uint32, value uint32, currentExecutionMode uint3
 	rwmode := getRWMode(csrReg, currentExecutionMode)
 	mode := getDetailsForCSR(csrReg).mode
 	// mode 3 is read only, we can't write in to it
-	if rwmode > currentExecutionMode || mode >= 3 {
+	if rwmode > currentExecutionMode || mode > 3 {
 		// Attempts to access a non-existent CSR raise an illegal instruction exception. Attempts to access a
 		//CSR without appropriate privilege level or to write a read-only register also raise illegal instruction
 		//exceptions.

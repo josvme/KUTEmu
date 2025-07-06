@@ -33,8 +33,8 @@ func (u *UART) interruptsEnabled() byte {
 	return u.registerRT[IER] & 0x1
 }
 
-func NewUART() UART {
-	return UART{
+func NewUART() *UART {
+	return &UART{
 		// We are ready to transmit and receive
 		registerRT: [8]byte{0, 0, 0, 0, 0, 32, 0, 0},
 		registerDL: [3]byte{0, 0, 0},
@@ -60,6 +60,28 @@ func (u *UART) Write(b byte, location uint32) error {
 	}
 
 	return nil
+}
+
+func (u *UART) DataExistsToRead() bool {
+	if u.registerRT[LSR]&0x1 > 0 {
+		return true
+	}
+	if u.registerRT[LSR]&0x1 == 0 {
+		// read only if there is no data in receive buffer
+		unix.SetNonblock(int(os.Stdin.Fd()), true)
+		defer unix.SetNonblock(int(os.Stdin.Fd()), false)
+
+		// Create a buffer to read into
+		buf := make([]byte, 1)
+		// Try to read one byte
+		_, err := os.Stdin.Read(buf)
+		if err == nil {
+			u.registerRT[RBR] = buf[0]
+			u.registerRT[LSR] |= 0x1
+			return true
+		}
+	}
+	return false
 }
 
 // TODO
