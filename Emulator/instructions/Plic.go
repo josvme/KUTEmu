@@ -129,5 +129,5 @@ func (plic *Plic) TriggerInterrupt(id uint32, cpu *Cpu) {
 	plic.Pending = append(plic.Pending, id)
 	// also set flag of hart
 	// 11 is external machine interrupt pending
-	cpu.CSR.Registers[MIP] = 1 << 11
+	cpu.CSR.Registers[MIP] = cpu.CSR.Registers[MIP] | 1<<11
 }

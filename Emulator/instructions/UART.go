@@ -2,8 +2,9 @@ package instructions
 
 import (
 	"fmt"
-	"golang.org/x/sys/unix"
 	"os"
+
+	"golang.org/x/sys/unix"
 )
 
 const THR = 0

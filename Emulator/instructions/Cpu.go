@@ -3,6 +3,7 @@ package instructions
 import (
 	"fmt"
 	"os"
+	"sync"
 )
 
 type Cpu struct {
@@ -13,6 +14,7 @@ type Cpu struct {
 	AtomicReserved bool
 	// 3 for machine, 1 for supervisor, 2 for hypervisor, 0 for user
 	CurrentMode uint32
+	Mutex       sync.Mutex
 }
 
 func (c *Cpu) ExecInst(i Inst) error {
